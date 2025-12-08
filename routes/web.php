@@ -36,8 +36,10 @@ Route::middleware('authenticated')->group(function () {
 
         Route::get('guru/tugas/tambah', [App\Http\Controllers\Guru\TugasController::class, 'tambah'])->name('guru.tugas.tambah');
         Route::post('guru/tugas/tambah', [App\Http\Controllers\Guru\TugasController::class, 'simpanTugas'])->name('guru.tugas.simpanTugas');
-
-        Route::get('guru/tugas/periksa', [App\Http\Controllers\Guru\TugasController::class,'periksaTugas'])->name('guru.tugas.periksa');
+        //periksa
+        Route::get('guru/tugas/{id}/periksa', [App\Http\Controllers\Guru\TugasController::class, 'periksaTugas'])->name('guru.tugas.periksa');
+        Route::get('guru/tugas/{id}/edit', [App\Http\Controllers\Guru\TugasController::class, 'editTugas'])->name('guru.tugas.edit');
+        Route::put('/guru/tugas/{id}', [TugasController::class, 'updateTugas'])->name('guru.tugas.update');
 
         Route::post('guru/get-kelas-by-matpel', [App\Http\Controllers\Guru\TugasController::class, 'getKelasByMatpel'])->name('guru.get-kelas-by-matpel');
         Route::get('guru/get-siswa', [App\Http\Controllers\Guru\TugasController::class, 'getSiswa'])->name('guru.get-siswa');

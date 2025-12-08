@@ -16,7 +16,6 @@ class TugasController extends Controller
 {
     public function tambah(Request $request, KelasServiceInterface $kelasService, MatpelServiceInterface $matpelService)
     {
-        $kelas = $kelasService->getKelasByGuru($request->role_id);
         $matpel = $matpelService->getMatpelByGuru($request->role_id);
         return inertia("guru/tugas/tambah-tugas", [
             'matpels' => $matpel,
@@ -37,6 +36,7 @@ class TugasController extends Controller
             ])->groupBy('kelas.id', 'kelas.nama')
             ->get();
     }
+
     public function index(Request $request, string $kelas_id, MatpelServiceInterface $matpelService)
     {
         $guru = $request->user()->id;
@@ -145,7 +145,57 @@ class TugasController extends Controller
             ];
         });
     }
-    public function periksaTugas(){
+    public function periksaTugas(Request $request, string $id = null)
+    {
+
         return inertia('guru/tugas/periksa-tugas');
+    }
+
+    public function editTugas(Request $request, string|null $id = null, MatpelServiceInterface $matpelService)
+    {
+
+        $tugas = Tugas::find($id);
+        $matpel = $matpelService->getMatpelByGuru($request->role_id);
+
+        return inertia('guru/tugas/edit-tugas', [
+            'tugas' => $tugas,
+            'matpels' => $matpel,
+        ]);
+    }
+    public function updateTugas(Request $request, string $id)
+    {
+        try {
+            $data = $request->validate([
+                'matpel' => ['required', 'string'],
+                'judul' => ['required'],
+                'deskripsi' => ['required'],
+                'mode_pengumpulan' => ['required'],
+                'deadline' => ['required'],
+                'receiver_type_id' => ['required'],
+                'receiver_type' => ['required']
+            ]);
+
+            $deadline = Carbon::parse($data['deadline'])->format('Y-m-d H:i:s');
+
+            $tugas = Tugas::findOrFail($id);
+
+            $tugas->update([
+                'matpel_kode'        => $data['matpel'],
+                'receiver_type_id'   => $data['receiver_type_id'],
+                'receiver_type'      => $data['receiver_type'],
+                'title'              => $data['judul'],
+                'content'            => $data['deskripsi'],
+                'mode_pengumpulan'   => $data['mode_pengumpulan'],
+                'deadline'           => $deadline,
+            ]);
+
+            return redirect()->back()->withErrors([
+                'success' => "Tugas Berhasil di update!"
+            ]);
+        } catch (\Throwable $th) {
+            return redirect()->back()->withErrors([
+                'gagal' => "Tugas gagal di update!"
+            ]);
+        }
     }
 }

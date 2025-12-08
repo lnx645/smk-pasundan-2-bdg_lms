@@ -3,13 +3,7 @@ import HugeiconsTaskDaily01 from '@/icons/HugeiconsTaskDaily01.vue';
 import MaterialSymbolsCheckCircleUnreadOutline from '@/icons/MaterialSymbolsCheckCircleUnreadOutline.vue';
 import { formatTanggal } from '@/lib/utils';
 defineProps<{
-    item: {
-        title: string;
-        receiver_type_id: any,
-        receiver_type: string,
-        nama_matpel: string;
-        deadline: string;
-    };
+    item: any;
 }>();
 </script>
 
