@@ -86,7 +86,7 @@ class MateriService implements MateriServiceInterface
     public function simpanMateri(array $data, string $kelas_kode, string $guru_id)
     {
         try {
-            $kelass = collect($data['kelas_ids'])->pluck('id_kelas');
+            $kelass = $data['kelas_ids'] ?? [];
             $matpel = $data['matpel']['kode_matpel'];
             $nomorMateriTerakhir = $this->getMateri($kelas_kode, $matpel)->max('nomor_materi');
             $user = Siswa::with('user')->whereIn('kelas_id', $kelass)->get();

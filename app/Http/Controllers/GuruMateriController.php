@@ -141,14 +141,12 @@ class GuruMateriController extends Controller
             'publish_date' => ['nullable'],
             'file_materi' => ["nullable"]
         ]);
-
-      
-        
         if ($materiService->simpanMateri($data, $kelas_kode, $id)) {
             return redirect()->back()->withErrors([
                 'success' => "Materil berhasil di tambahkan"
             ]);
         }
+        
         return redirect()->back()->withErrors([
             'gagal' => "Materil berhasil di tambahkan"
         ]);
