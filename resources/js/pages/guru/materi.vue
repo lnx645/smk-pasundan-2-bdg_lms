@@ -1,139 +1,194 @@
 <script setup lang="ts">
 import { deleteMateri, publishMateri, tambahMateri } from '@/actions/App/Http/Controllers/GuruMateriController';
 import Button from '@/components/button.vue';
-import Modal from '@/components/modal.vue';
+import Modal from '@/components/modal.vue'; // Asumsi komponen ini ada
 import CarbonEventSchedule from '@/icons/CarbonEventSchedule.vue';
-import CiTriangleWarning from '@/icons/CiTriangleWarning.vue';
 import IcBaselineDelete from '@/icons/IcBaselineDelete.vue';
 import MaterialSymbolsAddCircleOutline from '@/icons/MaterialSymbolsAddCircleOutline.vue';
 import MaterialSymbolsCheckCircleUnreadOutline from '@/icons/MaterialSymbolsCheckCircleUnreadOutline.vue';
+import MaterialSymbolsSearch from '@/icons/MaterialSymbolsCheckCircleUnreadOutline.vue'; // Icon baru untuk empty state
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useVfm } from 'vue-final-modal';
 import { toast } from 'vue-sonner';
+
 const page = usePage();
-const matpelSelected = ref<string | null>((page.props.kode_matpel as string) ?? null);
-watch(matpelSelected, () => {
-    if (matpelSelected) {
-        router.visit('?kode_matpel=' + matpelSelected.value);
+const matpelSelected = ref<string | null>((page.props.kode_matpel as string) ?? '');
+
+// Watcher untuk Filter Matpel
+watch(matpelSelected, (newVal) => {
+    if (newVal) {
+        router.visit('?kode_matpel=' + newVal, {
+            preserveScroll: true,
+            preserveState: true,
+        });
     }
 });
+
 const vfm = useVfm();
 const modalID = 'modalViewData';
-function openModalTambah() {
-    vfm.open(modalID);
-}
+
 function close() {
     vfm.close(modalID);
 }
+
+// Logic Hapus
 async function deleteMateriItem(id: string) {
-    if (confirm('Apakah anda yakin')) {
-        const del = await router.delete(
-            deleteMateri({
-                materi_id: id,
-            }).url,
-        );
+    if (confirm('Apakah Anda yakin ingin menghapus materi ini? Data yang dihapus tidak dapat dikembalikan.')) {
+        router.delete(deleteMateri({ materi_id: id }).url, {
+            onSuccess: () => toast.success('Materi berhasil dihapus'),
+            onError: () => toast.error('Gagal menghapus materi')
+        });
     }
 }
+
+// Logic Publish
 async function publishMateriItem(id: string) {
-    if (confirm('Apakah anda yakin')) {
-        const del = await router.patch(publishMateri().url, {
-            id : id
+    if (confirm('Terbitkan materi ini sekarang? Siswa akan segera melihat materi ini.')) {
+        router.patch(publishMateri().url, { id: id }, {
+            onSuccess: () => toast.success('Materi berhasil diterbitkan'),
+            onError: () => toast.error('Gagal menerbitkan materi')
         });
     }
 }
-watch(page, (e) => {
-    if (page.props.errors.success) {
-        toast.success(page.props.errors.success as string, {
-            position: 'top-right',
-        });
-    } else if (page.props.errors.gagal) {
-        toast.error(page.props.errors.success as string, {
-            position: 'top-right',
-        });
+
+// Watcher Global Error/Success (Optional jika sudah di handle layout)
+watch(() => page.props.errors, (errors) => {
+    if (errors.success) {
+        toast.success(errors.success as string);
+    } else if (errors.gagal) {
+        toast.error(errors.gagal as string);
     }
-});
+}, { deep: true });
 </script>
 
 <template>
     <Modal @close="close" :modalID="modalID" title="Tambah Data">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Magni maxime officia impedit quod, iure ipsa animi dolore ducimus, deleniti nostrum
-        doloribus vel aut cum saepe tenetur a magnam neque nemo?
+        <p class="text-neutral-600">Konten modal...</p>
     </Modal>
-    <div class="mt-4 flex items-center space-x-3">
-        <Link
-            :href="
-                tambahMateri({
-                    kelas_kode: $page.props.kelas_kode as string,
-                })
-            "
-            class="flex cursor-pointer items-center space-x-1 rounded bg-orange-500 p-2 px-3 text-xs text-white shadow"
-        >
-            <MaterialSymbolsAddCircleOutline />
-            <span>Tambah Materi</span>
-        </Link>
-        <select v-model="matpelSelected" class="rounded border border-neutral-300 bg-white px-2 py-1 text-sm">
-            <option disabled :selected="true">--Pilih Matpel---</option>
-            <option
-                v-for="value in $page.props.matpels"
-                :selected="value.kode_matpel === $page.props.kode_matpel"
-                :key="value.kode_matpel"
-                :value="value.kode_matpel"
-            >
-                {{ value.nama }}
-            </option>
-        </select>
-    </div>
-    <table v-if="($page.props.matpel_kode || $page.props?.materials) && $page.props?.materials.length > 0" class="cool-table mt-4 bg-white">
-        <thead class="cool-head">
-            <tr>
-                <th>NO</th>
-                <th>Judul</th>
-                <th>Tanggal Publish / Publish</th>
-                <th>Total File Materi</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody class="cool-body text-xs">
-            <tr v-if="$page.props.materials.length > 0" v-for="materi in $page.props.materials">
-                <td>
-                    {{ materi.nomor_materi }}
-                </td>
 
-                <td>
-                    <p class="line-clamp-1">
-                        {{ materi.title }}
-                    </p>
-                </td>
-                <td class="flex items-center justify-between space-x-2">
-                    <p class="line-clamp-1">{{ materi.publish_date }}</p>
-                    <div>
-                        <span v-if="materi.is_published" class="flex items-center justify-center rounded-full text-[15px] text-green-700">
-                            <MaterialSymbolsCheckCircleUnreadOutline />
-                        </span>
-                        <span v-else class="flex items-center justify-center rounded-full text-[15px]">
-                            <CarbonEventSchedule />
-                        </span>
-                    </div>
-                </td>
-                <td>
-                    <div class="text-center font-semibold text-red-500  underline">{{ materi.jumlahFileMateri }}</div>
-                </td>
-                <td class="flex justify-center items-center space-x-2">
-                    <Button @click="() => deleteMateriItem(materi.id)" class="bg-red-500 p-1 hover:bg-red-700 rounded-full">
-                        <IcBaselineDelete />
-                    </Button>
-                    <Button v-if="!materi.is_published" @click="() => publishMateriItem(materi.id)" class="font-normal px-2 rounded-full py-1 text-xs">
-                        Publish
-                    </Button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <div v-else>
-        <div class="mt-2 flex items-center space-x-1 rounded-md border border-red-200 bg-red-100 p-3 text-sm text-red-500">
-            <CiTriangleWarning />
-            <p>Silahkan pilih matpel dulu kang!</p>
+    <div class="mt-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        
+        <div class="relative w-full sm:w-64">
+            <select 
+                v-model="matpelSelected" 
+                class="w-full appearance-none rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm text-neutral-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm transition-all cursor-pointer"
+            >
+                <option value="" disabled>-- Pilih Mata Pelajaran --</option>
+                <option
+                    v-for="value in $page.props.matpels"
+                    :key="value.kode_matpel"
+                    :value="value.kode_matpel"
+                >
+                    {{ value.nama }}
+                </option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
         </div>
+
+        <Link
+            v-if="$page.props.kelas_kode"
+            :href="tambahMateri({ kelas_kode: $page.props.kelas_kode as string }).url"
+            class="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 hover:shadow transition-all"
+        >
+            <MaterialSymbolsAddCircleOutline class="text-lg" />
+            <span>Buat Materi Baru</span>
+        </Link>
+    </div>
+
+    <div class="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+        
+        <div v-if="($page.props.matpel_kode || $page.props?.materials) && $page.props?.materials.length > 0" class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-neutral-600">
+                <thead class="bg-neutral-50 text-xs uppercase font-semibold text-neutral-500 border-b border-neutral-200">
+                    <tr>
+                        <th class="px-6 py-4 w-[60px] text-center">No</th>
+                        <th class="px-6 py-4">Judul Materi</th>
+                        <th class="px-6 py-4">Jadwal / Status</th>
+                        <th class="px-6 py-4 text-center">File</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-100">
+                    <tr 
+                        v-for="(materi, index) in $page.props.materials" 
+                        :key="materi.id"
+                        class="hover:bg-neutral-50/80 transition-colors"
+                    >
+                        <td class="px-6 py-4 text-center font-medium text-neutral-400">
+                            {{ materi.nomor_materi || index + 1 }}
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <p class="font-semibold text-neutral-800 line-clamp-1 mb-1">{{ materi.title }}</p>
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div :class="[
+                                    'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border',
+                                    materi.is_published 
+                                        ? 'bg-green-50 text-green-700 border-green-200' 
+                                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                                ]">
+                                    <component :is="materi.is_published ? MaterialSymbolsCheckCircleUnreadOutline : CarbonEventSchedule" class="text-sm" />
+                                    <span>{{ materi.is_published ? 'Published' : 'Terjadwal' }}</span>
+                                </div>
+                                <span class="text-xs text-neutral-500">{{ materi.publish_date }}</span>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md bg-neutral-100 text-neutral-700 font-medium text-xs border border-neutral-200">
+                                {{ materi.jumlahFileMateri }} File
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <Button 
+                                    v-if="!materi.is_published" 
+                                    @click="publishMateriItem(materi.id)" 
+                                    variant="secondary"
+                                    class="!px-3 !py-1.5 !text-xs !font-medium bg-white border border-neutral-300 hover:bg-neutral-50"
+                                    title="Terbitkan Sekarang"
+                                >
+                                    Publish
+                                </Button>
+                                
+                                <button 
+                                    @click="deleteMateriItem(materi.id)" 
+                                    class="p-2 rounded-lg text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                    title="Hapus Materi"
+                                >
+                                    <IcBaselineDelete class="text-lg" />
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div v-else class="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <div class="w-16 h-16 mb-4 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400">
+                <MaterialSymbolsSearch v-if="$page.props.kode_matpel" class="text-3xl" />
+                <MaterialSymbolsAddCircleOutline v-else class="text-3xl" />
+            </div>
+            
+            <h3 class="text-lg font-semibold text-neutral-800 mb-1">
+                {{ $page.props.kode_matpel ? 'Belum Ada Materi' : 'Pilih Mata Pelajaran' }}
+            </h3>
+            
+            <p class="text-sm text-neutral-500 max-w-sm">
+                {{ $page.props.kode_matpel 
+                    ? 'Belum ada materi yang ditambahkan untuk mata pelajaran ini. Silakan tambah materi baru.' 
+                    : 'Silakan pilih mata pelajaran melalui filter di atas untuk melihat daftar materi.' 
+                }}
+            </p>
+        </div>
+
     </div>
 </template>

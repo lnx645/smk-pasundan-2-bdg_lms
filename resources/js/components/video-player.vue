@@ -16,7 +16,7 @@ const onError = ()=>{
 </script>
 
 <template>
-  <div class="relative w-full lg:w-[500px] aspect-video rounded-lg overflow-hidden bg-gray-900">
+  <div class="relative w-full lg:w-[100%] aspect-video rounded-lg overflow-hidden bg-gray-900">
     
     <div 
       v-if="!isLoaded" 

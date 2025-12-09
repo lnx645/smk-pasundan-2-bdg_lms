@@ -15,13 +15,15 @@ const define_layout = (layout: DefineComponent, name: string) => {
     return layout;
 };
 function getYouTubeVideoId(url: string): string | null {
-  const regExp = /^.*(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^#&?]{11}).*$/;
-  const match = url.match(regExp);
-  return (match && match[1].length === 11) ? match[1] : null;
+    const regExp = /^.*(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^#&?]{11}).*$/;
+    const match = url.match(regExp);
+    return match && match[1].length === 11 ? match[1] : null;
 }
-const formatTanggal = (date: string) => {
+const formatTanggal = (date: string | null = null) => {
+    if (!date) {
+        return date;
+    }
     return dayjs(date).format('DD MMM YYYY HH:mm');
 };
-export {getYouTubeVideoId,formatTanggal};
+export { formatTanggal, getYouTubeVideoId };
 export default define_layout;
-

@@ -51,6 +51,7 @@ class MateriController extends Controller
     {
         $materi  = $materiService->getDetailMateri($id_materi);
         $isVisiting = true;
+        
         return inertia('siswa/view-materi', [
             'materi' => $materi,
             'visiting' => $isVisiting,

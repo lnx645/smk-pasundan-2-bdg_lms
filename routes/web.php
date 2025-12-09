@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Guru\JawabanController;
 use App\Http\Controllers\Guru\TugasController;
 use App\Http\Controllers\GuruMateriController;
 use App\Http\Controllers\LoginController;
@@ -40,7 +41,9 @@ Route::middleware('authenticated')->group(function () {
         Route::get('guru/tugas/{id}/periksa', [App\Http\Controllers\Guru\TugasController::class, 'periksaTugas'])->name('guru.tugas.periksa');
         Route::get('guru/tugas/{id}/edit', [App\Http\Controllers\Guru\TugasController::class, 'editTugas'])->name('guru.tugas.edit');
         Route::put('/guru/tugas/{id}', [TugasController::class, 'updateTugas'])->name('guru.tugas.update');
+        Route::delete('guru/tugas/{id}', [TugasController::class,'deleteTugas'])->name('guru.tugas.delete');
 
+        Route::get('guru/tugas/{id}/{jawaban_id}',JawabanController::class)->name('guru.tugas.lihat_jawaban');
         Route::post('guru/get-kelas-by-matpel', [App\Http\Controllers\Guru\TugasController::class, 'getKelasByMatpel'])->name('guru.get-kelas-by-matpel');
         Route::get('guru/get-siswa', [App\Http\Controllers\Guru\TugasController::class, 'getSiswa'])->name('guru.get-siswa');
     });

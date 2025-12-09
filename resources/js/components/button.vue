@@ -44,7 +44,7 @@ const classes = computed(() => {
 
     const width = props.full ? 'w-full' : '';
 
-    return `${base} ${variants[props.variant]} ${disabledClass} ${width}`;
+    return `${base}  ${variants[props.variant]} ${disabledClass} ${width} flex items-center`;
 });
 </script>
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\JawabanTugas;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\Tugas;
@@ -148,15 +149,34 @@ class TugasController extends Controller
     public function periksaTugas(Request $request, string $id = null)
     {
 
-        return inertia('guru/tugas/periksa-tugas');
+        $jawaban = JawabanTugas::query()
+            ->select([
+                'jawaban_tugas.jawabanID as jawaban_id',
+                'jawaban_tugas.file_url',
+                'jawaban_tugas.created_at',
+
+                'users.id as user_id',
+                'users.name as user_name',
+
+                'siswas.nis',
+                'kelas.nama as kelas_nama',
+            ])
+            ->join('users', 'users.id', '=', 'jawaban_tugas.answered_by_id')
+            ->join('siswas', 'siswas.user_id', '=', 'users.id')
+            ->join('kelas', 'kelas.id', '=', 'siswas.kelas_id')
+            ->where('jawaban_tugas.tugas_id', $id)
+            ->get();
+
+        return inertia('guru/tugas/periksa-tugas', [
+            'jawaban' => $jawaban,
+            'tugas_id' => $id,
+        ]);
     }
 
     public function editTugas(Request $request, string|null $id = null, MatpelServiceInterface $matpelService)
     {
-
         $tugas = Tugas::find($id);
         $matpel = $matpelService->getMatpelByGuru($request->role_id);
-
         return inertia('guru/tugas/edit-tugas', [
             'tugas' => $tugas,
             'matpels' => $matpel,
@@ -197,5 +217,27 @@ class TugasController extends Controller
                 'gagal' => "Tugas gagal di update!"
             ]);
         }
+    }
+    public function deleteTugas(Request $request, string $id)
+    {
+        $guru_id = $request->user()->id;
+
+        $tugas = Tugas::where('tugasID', $id)
+            ->where('created_by_user_id', $guru_id)
+            ->first();
+
+        if (! $tugas) {
+            return redirect()->back()->withErrors([
+                'gagal' => "Opps tugas gagal dihapus!",
+            ]);
+        };
+        if (!$tugas->delete()) {
+            return redirect()->back()->withErrors([
+                'gagal' => "Opps tugas gagal dihapus!",
+            ]);
+        }
+        return redirect()->back()->withErrors([
+            'success' => "Opps tugas berhasil dihapus!",
+        ]);
     }
 }
