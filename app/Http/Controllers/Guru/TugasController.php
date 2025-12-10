@@ -16,14 +16,15 @@ use Illuminate\Support\Facades\DB;
 
 class TugasController extends Controller
 {
-    public function tambah(Request $request, KelasServiceInterface $kelasService, MatpelServiceInterface $matpelService)
+    public function tambah(Request $request, 
+    MatpelServiceInterface $matpelService)
     {
         $matpel = $matpelService->getMatpelByGuru($request->role_id);
         return inertia("guru/tugas/tambah-tugas", [
             'matpels' => $matpel,
         ]);
     }
-    public function getKelasByMatpel(Request $request, KelasServiceInterface $kelasService)
+    public function getKelasByMatpel(Request $request)
     {
         $matpels = $request->post('matpel_kode');
         return Kelas::withCount('siswa')
@@ -102,12 +103,8 @@ class TugasController extends Controller
                 ['receiver_users' => $receiverUserList]
             );
         });
-
-        // --- 5. Data tambahan ---
         $infoKelas = Kelas::find($kelas_id);
         $matpel = $matpelService->getMatpelByKelasAndGuru($kelas_id, $request->role_id);
-
-        // --- 6. Return inertia ---
         return inertia('guru/tugas', [
             'info_kelas' => $infoKelas,
             'search_current_terms' => [
@@ -205,15 +202,12 @@ class TugasController extends Controller
         $jawaban = JawabanTugas::query()
             ->with('nilai') // Load relasi nilai
             ->select([
-                // PENTING: Primary Key asli harus ikut di-select agar relasi 'with' jalan
                 'jawaban_tugas.jawabanID',
-
-                // Kolom lain
-                'jawaban_tugas.jawabanID as jawaban_id', // Alias tetap boleh ada
+                'jawaban_tugas.jawabanID as jawaban_id', 
                 'jawaban_tugas.file_url',
                 'jawaban_tugas.created_at',
                 'jawaban_tugas.tugas_id',
-                'jawaban_tugas.answered_by_id', // Sebaiknya foreign key juga dibawa
+                'jawaban_tugas.answered_by_id',
 
                 // Data Join
                 'users.id as user_id',
@@ -227,14 +221,11 @@ class TugasController extends Controller
             ->where('jawaban_tugas.tugas_id', $id)
             ->get();
 
-        // dd($jawaban); // Cek lagi, harusnya nilai tidak null jika datanya ada
-
         return inertia('guru/tugas/periksa-tugas', [
             'jawaban' => $jawaban,
             'tugas_id' => $id,
         ]);
     }
-
     public function editTugas(Request $request, string|null $id = null, MatpelServiceInterface $matpelService)
     {
         $tugas = Tugas::find($id);
@@ -256,11 +247,8 @@ class TugasController extends Controller
                 'receiver_type_id' => ['required'],
                 'receiver_type' => ['required']
             ]);
-
             $deadline = Carbon::parse($data['deadline'])->format('Y-m-d H:i:s');
-
             $tugas = Tugas::findOrFail($id);
-
             $tugas->update([
                 'matpel_kode'        => $data['matpel'],
                 'receiver_type_id'   => $data['receiver_type_id'],

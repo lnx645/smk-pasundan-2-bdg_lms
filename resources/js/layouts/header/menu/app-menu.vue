@@ -13,6 +13,7 @@ const role = computed(() => {
     return usePage().props.auth.user.role;
 });
 const { toggleMenu } = useNavigationMenu();
+
 </script>
 
 <template>
@@ -22,9 +23,7 @@ const { toggleMenu } = useNavigationMenu();
             <MenuSiswa v-if="role === 'siswa'" />
             <MenuGuru v-else-if="role === 'guru'" />
             <div class="ml-auto hidden lg:block">
-                <Link :href="logout()">
-                    <MenuItem label="Logout" class="text-red-500" href="/" :icon="CiLogOut" />
-                </Link>
+                <MenuItem label="Logout" class="text-red-500" :href="logout()" :icon="CiLogOut" />
             </div>
             <div class="ml-auto lg:hidden">
                 <button class="cursor-pointer" @click="toggleMenu">
