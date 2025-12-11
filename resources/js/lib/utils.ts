@@ -1,3 +1,4 @@
+import AdminLayout from '@/layouts/admin-layout/layout.vue';
 import Layout from '@/layouts/layout.vue';
 import { clsx, type ClassValue } from 'clsx';
 import dayjs from 'dayjs';
@@ -10,8 +11,11 @@ export function cn(...inputs: ClassValue[]) {
 const define_layout = (layout: DefineComponent, name: string) => {
     if (name.includes('auth')) {
         return layout;
+    } else if (name.includes('admin')) {
+        layout.default.layout = AdminLayout;
+    } else {
+        layout.default.layout = Layout;
     }
-    layout.default.layout = Layout;
     return layout;
 };
 function getYouTubeVideoId(url: string): string | null {

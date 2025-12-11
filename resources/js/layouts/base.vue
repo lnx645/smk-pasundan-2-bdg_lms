@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { saveFcmToken } from '@/actions/App/Http/Controllers/NotifServiceController';
 import '@vuepic/vue-datepicker/dist/main.css';
+import 'vue-select/dist/vue-select.css';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';

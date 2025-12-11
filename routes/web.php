@@ -16,7 +16,7 @@ Route::get("/send-notification", [NotifServiceController::class, 'testSend'])->n
 Route::get('login', LoginController::class)->name('login');
 Route::post('login', [LoginController::class, 'checkLogin'])->name('login.check');
 Route::get('logout', [LoginController::class, 'logout'])->name('auth.logout');
-
+Route::prefix('admin')->group(base_path('routes/admin.php'))->name('admin.');
 //authenticated guarded
 Route::middleware('authenticated')->group(function () {
     Route::get('/', DashboardController::class)->name('home');
