@@ -4,7 +4,8 @@ import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { usePage } from '@inertiajs/vue3';
 import { MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import Paging from './paging.vue';
+import Paging from '../paging.vue';
+import { getInitials } from '@/lib/utils';
 
 const page = usePage().props as any;
 
@@ -16,16 +17,7 @@ const links = computed(() => {
     return page.users?.links || [];
 });
 
-const getInitials = (name: string) => {
-    return name
-        ? name
-              .split(' ')
-              .map((n) => n[0])
-              .join('')
-              .substring(0, 2)
-              .toUpperCase()
-        : '??';
-};
+
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 
 const search = ref('');

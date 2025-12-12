@@ -16,9 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class TugasController extends Controller
 {
-    public function tambah(Request $request, 
-    MatpelServiceInterface $matpelService)
-    {
+    public function tambah(
+        Request $request,
+        MatpelServiceInterface $matpelService
+    ) {
         $matpel = $matpelService->getMatpelByGuru($request->role_id);
         return inertia("guru/tugas/tambah-tugas", [
             'matpels' => $matpel,
@@ -142,7 +143,6 @@ class TugasController extends Controller
                 'receiver_type_id' => ['required'],
                 'receiver_type' => ['required']
             ]);
-            $deadline = Carbon::parse($data['deadline'])->format('Y-m-d H:i:s');
             Tugas::create([
                 'matpel_kode'       => $data['matpel'],
                 'receiver_type_id' => $data['receiver_type_id'],
@@ -150,7 +150,7 @@ class TugasController extends Controller
                 'title'             => $data['judul'],
                 'content'           => $data['deskripsi'],
                 'mode_pengumpulan'  => $data['mode_pengumpulan'],
-                'deadline'          => $deadline,
+                'deadline'          => $data['deadline'],
                 'publish_date'      => now(), // atau isi sesuai kebutuhan
                 'created_by_user_id' => $request->user()->id,
             ]);
@@ -203,7 +203,7 @@ class TugasController extends Controller
             ->with('nilai') // Load relasi nilai
             ->select([
                 'jawaban_tugas.jawabanID',
-                'jawaban_tugas.jawabanID as jawaban_id', 
+                'jawaban_tugas.jawabanID as jawaban_id',
                 'jawaban_tugas.file_url',
                 'jawaban_tugas.created_at',
                 'jawaban_tugas.tugas_id',
@@ -247,7 +247,6 @@ class TugasController extends Controller
                 'receiver_type_id' => ['required'],
                 'receiver_type' => ['required']
             ]);
-            $deadline = Carbon::parse($data['deadline'])->format('Y-m-d H:i:s');
             $tugas = Tugas::findOrFail($id);
             $tugas->update([
                 'matpel_kode'        => $data['matpel'],
@@ -256,7 +255,7 @@ class TugasController extends Controller
                 'title'              => $data['judul'],
                 'content'            => $data['deskripsi'],
                 'mode_pengumpulan'   => $data['mode_pengumpulan'],
-                'deadline'           => $deadline,
+                'deadline'           => $data['deadline'],
             ]);
 
             return redirect()->back()->withErrors([

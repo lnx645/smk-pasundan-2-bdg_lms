@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Tugas extends Model
 {
@@ -29,8 +31,17 @@ class Tugas extends Model
     public function casts()
     {
         return [
+            'deadline' => "datetime",
             'receiver_type_id' => "array"
         ];
+    }
+    protected function deadline(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => Carbon::parse($value)
+                ->timezone('Asia/Jakarta')
+                ->format('d-M-Y h:i:s A'),
+        );
     }
     public function user()
     {

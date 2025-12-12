@@ -10,6 +10,7 @@ import {
 } from 'lucide-vue-next';
 import Avatar from '@/components/avatar.vue';
 import { logout } from '@/actions/App/Http/Controllers/LoginController';
+import { getInitials } from '@/lib/utils';
 
 const isDropdownOpen = ref(false);
 const dropdownRef = ref(null);
@@ -28,7 +29,7 @@ const user = computed(()=>{
     const data = page.props.auth.user;
     return {
         ...data,
-        initial :data.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+        initial :getInitials(data.name),
     };
 })
 </script>

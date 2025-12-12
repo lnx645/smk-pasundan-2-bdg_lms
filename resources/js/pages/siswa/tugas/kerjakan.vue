@@ -12,16 +12,17 @@ import MaterialSymbolsUpload from '@/icons/MaterialSymbolsUpload.vue';
 import MdiFileDocument from '@/icons/SolarDocumentAddBold.vue';
 import HugeiconsFileAttachment from '@/icons/StreamlinePlumpEmailAttachmentDocumentSolid.vue';
 import { kerjakanSimpan } from '@/routes/siswa/tugas/kerjakan';
-
+import dayjs from 'dayjs';
 // PROPS
 // Pastikan props dari controller memuat detail tugas & submission (jika ada)
 const page = usePage();
 const tugas = computed(() => page.props.tugas as any);
 const submission = computed(() => page.props.submission as any); // Data jawaban siswa (null jika belum)
 
-// STATE
-const isOverdue = computed(() => new Date() > new Date(tugas.value.deadline));
-// Cek .value karena submission sekarang adalah computed ref
+const isOverdue = computed(() => {
+    return dayjs().isAfter(dayjs(tugas.value.deadline));
+});
+
 const isSubmitted = computed(() => !!submission.value);
 const isGraded = computed(() => submission.value?.nilai !== null && submission.value?.nilai !== undefined);
 // FORM
@@ -211,7 +212,7 @@ function unsubmit() {
                             <span class="font-bold">Terlambat!</span> Anda mengumpulkan melewati tenggat waktu.
                         </div>
 
-                        <div v-if="['text', 'mixed'].includes(tugas.mode_pengumpulan)">
+                        <div v-if="!isOverdue && ['text', 'mixed'].includes(tugas.mode_pengumpulan)">
                             <label class="mb-1 block text-xs font-semibold text-neutral-500">Jawaban Teks</label>
                             <textarea
                                 v-model="form.jawaban_text"
@@ -221,7 +222,7 @@ function unsubmit() {
                             ></textarea>
                         </div>
 
-                        <div v-if="['file', 'foto', 'mixed'].includes(tugas.mode_pengumpulan)">
+                        <div v-if="!isOverdue && ['file', 'foto', 'mixed'].includes(tugas.mode_pengumpulan)">
                             <label class="mb-1 block text-xs font-semibold text-neutral-500">Upload File</label>
 
                             <div
@@ -264,6 +265,7 @@ function unsubmit() {
                         </div>
 
                         <button
+                            v-if="!isOverdue"
                             @click="submitTugas"
                             :disabled="form.processing"
                             class="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"

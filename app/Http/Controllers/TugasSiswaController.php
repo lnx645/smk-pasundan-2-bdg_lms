@@ -36,7 +36,11 @@ class TugasSiswaController extends Controller
             'jawaban_text' => 'nullable|string',
             'file' => 'nullable|file|max:10240',
         ]);
+        $tugas = Tugas::where('tugasID', $request->tugas_id)->firstOrFail();
 
+        if (now()->greaterThan($tugas->deadline)) {
+            return back()->with('error', 'Maaf, batas waktu pengumpulan tugas sudah berakhir. Anda tidak dapat mengirim jawaban.');
+        }
         $path = null;
         $fileUrl = null;
 
@@ -100,14 +104,13 @@ class TugasSiswaController extends Controller
                     ->whereJsonContains('receiver_type_id', $kelasId);
             })
             ->get();
-
         $jawaban = JawabanTugas::with('nilai')->where('answered_by_id', $userId)
             ->get()
             ->keyBy('tugas_id'); // supaya ceknya cepat
         $tugas = $tugas->map(function ($item) use ($jawaban, $userId) {
             $nilai = collect($item->nilais)->where('siswa_id', '=', $userId)->where('tugas_id', '=', $item->tugasID)->first();
             if ($nilai) {
-               $item->nilai_siswa = $nilai->angka;
+                $item->nilai_siswa = $nilai->angka;
             }
             $item->is_dikerjakan = $jawaban->has($item->tugasID);
             $item->is_deadline_over = now()->greaterThan(SupportCarbon::parse($item->deadline));

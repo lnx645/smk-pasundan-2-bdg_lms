@@ -14,7 +14,11 @@ class UserManagementController extends Controller
     public function siswa()
     {
         $user = User::whereHas('siswa')->paginate(5);
-        return inertia('admin/user-management/siswa', ['users' => $user]);
+        return inertia('admin/user-management/siswa/index', ['users' => $user]);
+    }
+    public function tambahSiswa()
+    {
+        return inertia('admin/user-management/siswa/tambah');
     }
     public function guru()
     {

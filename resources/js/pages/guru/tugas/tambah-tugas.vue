@@ -43,7 +43,6 @@
                         </div>
 
                         <hr class="border-dashed border-neutral-200" />
-
                         <div>
                             <label class="mb-2 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Tugaskan Kepada</label>
                             <div class="mb-3 grid grid-cols-2 rounded-lg bg-neutral-100 p-1">
@@ -122,7 +121,7 @@
                     <div class="space-y-5 p-5">
                         <div>
                             <label class="mb-2 block text-xs font-semibold tracking-wider text-neutral-500 uppercase">Batas Waktu (Deadline)</label>
-                            <VueDatePicker v-model="form.deadline" auto-apply :enable-time-picker="true" input-class-name="dp-custom-input" />
+                            <VueDatePicker :formats="{ input: 'dd.MM.yyyy - HH:mm' }" v-model="form.deadline" auto-apply :enable-time-picker="true" input-class-name="dp-custom-input" />
                             <p v-if="form.errors.deadline" class="mt-1 text-xs font-medium text-red-500">{{ form.errors.deadline }}</p>
                         </div>
 
