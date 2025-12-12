@@ -17,7 +17,6 @@ const links = computed(() => page.value.users?.links || []);
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'Manajemen Guru' }];
 const search = ref(page.value.filters?.search || '');
 
-// --- LOGIC MODAL ---
 const showModal = ref(false);
 const selectedUser = ref<any>(null);
 
@@ -32,7 +31,6 @@ const closeModal = () => {
         selectedUser.value = null;
     }, 200);
 };
-// -------------------
 
 watch(
     search,
@@ -48,7 +46,7 @@ watch(
             <Breadcrumb :items="breadcrumbs"  />
             <div class="flex flex-col gap-2 sm:flex-row">
                 <Link
-                    :href="UserManagementController.tambahSiswa()"
+                    :href="UserManagementController.tambahGuru()"
                     class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700"
                 >
                     <Plus class="h-4 w-4" />
@@ -88,7 +86,7 @@ watch(
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
                                     <div class="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full shadow-sm ring-2 ring-white">
-                                        <Avatar :name="user.nama || user.name" class="h-full w-full object-cover" />
+                                        <Avatar :imageSrc="user.guru.foto" :name="user.nama || user.name" class="h-full w-full object-cover" />
                                     </div>
                                     <div class="font-monospace">
                                         <div class="font-semibold text-gray-900">{{ user.nama || user.name }}</div>
@@ -116,19 +114,19 @@ watch(
 
                             <td class="px-6 py-4 text-center">
                                 <span
-                                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
+                                    class="inline-flex capitalize items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
                                     :class="
-                                        user.active ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-red-50 text-red-700 ring-red-600/10'
+                                        user.guru.status == 'aktif' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-red-50 text-red-700 ring-red-600/10'
                                     "
                                 >
-                                    <span class="h-1.5 w-1.5 rounded-full" :class="user.active ? 'bg-emerald-500' : 'bg-red-500'"></span>
-                                    {{ user.active ? 'Aktif' : 'Nonaktif' }}
+                                    <span class="h-1.5 w-1.5 rounded-full" :class="user.guru.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                                    {{ user.guru.status }}
                                 </span>
                             </td>
 
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                                    <button class="rounded-lg p-2 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600">
+                                    <button @click="router.visit(UserManagementController.updateGuru({id : user.guru.nip}).url)" class="rounded-lg p-2 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600">
                                         <Pencil class="h-4 w-4" />
                                     </button>
                                     <button class="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600">

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Siswa extends Model
 {
@@ -30,5 +31,12 @@ class Siswa extends Model
     }
     public function kelas(){
         return $this->belongsTo(Kelas::class);
+    }
+    public function getFotoUrlAttribute()
+    {
+        if ($this->pas_photo && Storage::disk('public')->exists($this->pas_photo)) {
+            return asset('storage/' . $this->pas_photo);
+        }
+        return asset('images/siswa-default.png'); 
     }
 }

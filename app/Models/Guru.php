@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Guru extends Model
 {
@@ -15,14 +16,25 @@ class Guru extends Model
     protected $fillable = [
         'nip',
         'jenis_kelamin',
+        'foto',
         'status',
+        'user_id',
         'gelar_depan',
         'gelar_belakang',
     ];
-
+    protected $appends = ['foto_url'];
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+    public function getFotoUrlAttribute()
+    {
+        if ($this->foto && Storage::disk('public')->exists($this->foto)) {
+            return asset('storage/' . $this->foto);
+        }
+        // Return gambar default jika tidak ada foto
+        // Pastikan Anda punya file ini di public/images/default-avatar.png
+        return asset('images/default-avatar.png');
     }
     public function matpels()
     {

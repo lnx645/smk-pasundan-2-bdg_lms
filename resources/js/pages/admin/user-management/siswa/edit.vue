@@ -1,28 +1,29 @@
 <script setup lang="ts">
-import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
+import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController'; // Sesuaikan path
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { useForm } from '@inertiajs/vue3';
-import { Camera, Save } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { Camera, Save, ArrowLeft, RefreshCw } from 'lucide-vue-next';
+import { computed, ref, watch, onMounted } from 'vue';
 import { toast } from 'vue-sonner';
+import { Link } from '@inertiajs/vue3';
 
-// --- 1. PROPS ---
-// Menerima data kelas dari Controller
 const props = defineProps<{
     kelasList: { id: number; nama: string; tingkat: string }[];
+    siswa: any;
 }>();
 
-const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }, { label: 'Siswa' }, { label: 'Tambah' }];
+const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }, { label: 'Siswa' }, { label: 'Edit' }];
+
 
 const form = useForm({
-    name: '',
-    nis: '',
-    jenis_kelamin: 'L',
-    agama: 'Islam',
-    tahun_masuk: new Date().getFullYear().toString(),
-    tingkat: 10,
-    kelas_id: '',
-    status: 'Aktif',
+    name: props.siswa.user?.name || props.siswa.name || '', 
+    nis: props.siswa.nis,
+    jenis_kelamin: props.siswa.jenis_kelamin,
+    agama: props.siswa.agama,
+    tahun_masuk: props.siswa.tahun_masuk,
+    tingkat: props.siswa.tingkat,
+    kelas_id: props.siswa.kelas_id,
+    status: props.siswa.status, // Pastikan casing (Aktif/Non-aktif) sesuai DB
     pas_photo: null as File | null,
 });
 
@@ -32,18 +33,28 @@ const filteredKelas = computed(() => {
 
 watch(
     () => form.tingkat,
-    () => {
-        form.kelas_id = '';
-    },
+    (newVal, oldVal) => {
+        // Cek agar tidak reset saat pertama kali load component
+        if (oldVal !== undefined && newVal != props.siswa.tingkat) {
+            form.kelas_id = '';
+        }
+    }
 );
 
-const photoPreview = ref<string | null>(null);
+const photoPreview = ref<string | null>(props.siswa.foto_url || null);
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const handlePhotoChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files[0]) {
         const file = target.files[0];
+        
+        // Validasi ukuran client-side
+        if(file.size > 2048 * 1024) {
+             toast.error('Ukuran file terlalu besar (Max 2MB)');
+             return;
+        }
+
         form.pas_photo = file;
 
         const reader = new FileReader();
@@ -59,34 +70,48 @@ const triggerFileInput = () => {
 };
 
 const submit = () => {
-    form.submit(UserManagementController.simpanSiswa(), {
+       form.post(UserManagementController.updateSiswa({
+        id:props.siswa.nis
+    }).url), {
+        preserveScroll: true,
         onSuccess: () => {
-            toast.success('Ada kesalahan pada saat simpan data siswa! Periksa lagi inputan anda', {
+            toast.success('Data siswa berhasil diperbarui!', {
                 position: 'top-center',
             });
-            form.reset();
-            photoPreview.value = null;
+            form.pas_photo = null; 
         },
-        onError() {
-            toast.error('Ada kesalahan pada saat simpan data siswa! Periksa lagi inputan anda', {
+        onError: (errors:any) => {
+            toast.error('Gagal memperbarui data. Periksa inputan Anda.', {
                 position: 'top-center',
             });
+            console.error(errors);
         },
-    });
+    };
 };
 </script>
 
 <template>
-    <Breadcrumb :items="breadcrumbs" />
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-1">
+        <Breadcrumb :items="breadcrumbs" />
+        
+        <Link
+            :href="UserManagementController.siswa().url" 
+            class="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
+        >
+            <ArrowLeft class="h-4 w-4" />
+            Kembali
+        </Link>
+    </div>
 
-    <div class="px-4 pb-10 mt-3">
+    <div class="pb-10 px-4">
         <form @submit.prevent="submit" class="flex flex-col gap-6 lg:flex-row">
             <div class="w-full lg:w-1/4">
                 <div class="sticky top-6 flex flex-col items-center rounded-xl border border-neutral-200 bg-white p-6 text-center shadow-sm">
                     <h3 class="mb-4 text-sm font-semibold text-neutral-700">Foto Profil</h3>
 
                     <div
-                        class="group relative h-32 w-32 cursor-pointer overflow-hidden rounded-full border-2 border-dashed border-neutral-300 transition-colors hover:border-indigo-500"
+                        class="group relative h-32 w-32 cursor-pointer overflow-hidden rounded-full border-2 transition-colors"
+                        :class="form.errors.pas_photo ? 'border-red-500' : 'border-dashed border-neutral-300 hover:border-indigo-500'"
                         @click="triggerFileInput"
                     >
                         <img v-if="photoPreview" :src="photoPreview" class="h-full w-full object-cover" />
@@ -118,8 +143,8 @@ const submit = () => {
             <div class="flex-1">
                 <div class="rounded-xl border border-neutral-200 bg-white shadow-sm">
                     <div class="border-b border-neutral-100 px-6 py-4">
-                        <h2 class="text-base font-semibold text-neutral-800">Informasi Siswa</h2>
-                        <p class="text-xs text-neutral-500">Lengkapi data diri siswa & akun pengguna.</p>
+                        <h2 class="text-base font-semibold text-neutral-800">Edit Informasi Siswa</h2>
+                        <p class="text-xs text-neutral-500">Perbarui data diri siswa & akun pengguna.</p>
                     </div>
 
                     <div class="p-6">
@@ -140,7 +165,7 @@ const submit = () => {
                                 <input
                                     v-model="form.nis"
                                     type="number"
-                                    class="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm transition-all outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                                    class="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm transition-all outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-100 disabled:text-gray-500"
                                     placeholder="Nomor Induk Siswa"
                                 />
                                 <span v-if="form.errors.nis" class="text-xs text-red-500">{{ form.errors.nis }}</span>
@@ -230,21 +255,21 @@ const submit = () => {
                     </div>
 
                     <div class="flex items-center justify-end gap-3 rounded-b-xl border-t border-neutral-100 bg-neutral-50 px-6 py-4">
-                        <button
-                            type="button"
+                        <Link
+                            :href="UserManagementController.siswa().url"
                             class="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 active:scale-95"
-                            @click="form.reset()"
                         >
-                            Reset
-                        </button>
+                            Batal
+                        </Link>
                         <button
                             type="submit"
                             :disabled="form.processing"
                             class="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 active:scale-95 disabled:opacity-50"
                         >
-                            <Save class="h-4 w-4" />
+                            <RefreshCw v-if="form.processing" class="h-4 w-4 animate-spin" />
+                            <Save v-else class="h-4 w-4" />
                             <span v-if="form.processing">Menyimpan...</span>
-                            <span v-else>Simpan Data</span>
+                            <span v-else>Simpan Perubahan</span>
                         </button>
                     </div>
                 </div>

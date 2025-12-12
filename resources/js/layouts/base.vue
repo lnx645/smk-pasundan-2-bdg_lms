@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { saveFcmToken } from '@/actions/App/Http/Controllers/NotifServiceController';
 import '@vuepic/vue-datepicker/dist/main.css';
-import 'vue-select/dist/vue-select.css';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import { onMounted } from 'vue';
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging'; // Tambah isSupported
+import { onMounted, ref } from 'vue';
 import { ModalsContainer } from 'vue-final-modal';
 import 'vue-final-modal/style.css';
+import 'vue-select/dist/vue-select.css';
 import { toast, Toaster } from 'vue-sonner';
 import 'vue-sonner/style.css';
 
@@ -21,28 +21,57 @@ const firebaseConfig = {
     appId: '1:898047629674:web:6703f1ccad4f02c86ded13',
 };
 
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+let messaging: any = null;
 
-// ======================================
-// REQUEST PERMISSION
-// ======================================
+const initFirebase = async () => {
+    try {
+        const supported = await isSupported();
+        if (supported) {
+            const app = initializeApp(firebaseConfig);
+            messaging = getMessaging(app);
+            
+            setupMessageListener();
+        } else {
+            console.warn('Firebase Messaging not supported in this browser.');
+        }
+    } catch (e) {
+        console.error('Firebase Initialization Error:', e);
+    }
+};
+
 async function requestPermission() {
+    if (!messaging) return; 
+
     if (!('Notification' in window)) {
         return toast.error('Browser tidak mendukung Notifications');
     }
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-        await getFcmToken();
+
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            await getFcmToken();
+        } else {
+            console.log('Notifikasi permission ditolak/default');
+        }
+    } catch (err) {
+        console.error('Error requesting permission:', err);
     }
 }
 
 async function getFcmToken() {
+    if (!messaging) return;
+
     try {
+        if (!navigator.serviceWorker) {
+            console.error('Service Worker tidak didukung browser ini');
+            return;
+        }
+
         const registration = await navigator.serviceWorker.ready;
+        
         const oldToken = localStorage.getItem('fcm_token');
         if (oldToken) {
-            console.log('Token sudah ada, skip:', oldToken);
+            
             return;
         }
 
@@ -52,40 +81,51 @@ async function getFcmToken() {
         });
 
         if (!token) {
-            toast.error('Token kosong');
+            // toast.error('Token kosong'); // Opsional: jangan terlalu spam user
+            console.warn('FCM Token kosong');
             return;
         }
 
-        axios.post(saveFcmToken().url, { token });
-
+        await axios.post(saveFcmToken().url, { token });
+        
         localStorage.setItem('fcm_token', token);
+        console.log('FCM Token Saved');
 
-        console.log('FCM Token:', token);
     } catch (err) {
-        console.error('FCM ERROR:', err);
-        toast.error('Gagal mendapatkan FCM token');
+        console.error('FCM Get Token Error:', err);
+    }
+}
+
+function setupMessageListener() {
+    if (messaging) {
+        try {
+            onMessage(messaging, (payload) => {
+                console.log('Foreground message:', payload);
+                if (payload.notification) {
+                    toast.success(`${payload.notification.title} - ${payload.notification.body}`);
+                }
+            });
+        } catch (e) {
+            console.error('Gagal setup onMessage listener:', e);
+        }
     }
 }
 
 onMounted(async () => {
-    if ('serviceWorker' in navigator) {
-        // Pastikan hanya 1 SW yang aktif
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-            scope: '/',
-        });
+    await initFirebase();
 
-        console.log('SW ready:', registration);
-
-        await requestPermission();
+    try {
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                scope: '/',
+            });
+            console.log('SW registered:', registration);
+            
+            await requestPermission();
+        }
+    } catch (e) {
+        console.error('Service Worker Registration Failed:', e);
     }
-});
-
-// ======================================
-// LISTEN PESAN SAAT TAB AKTIF
-// ======================================
-onMessage(messaging, (payload) => {
-    console.log('Foreground message:', payload);
-    toast.success(payload.notification?.title + ' - ' + payload.notification?.body);
 });
 </script>
 
