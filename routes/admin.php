@@ -23,6 +23,7 @@ Route::prefix('user-management')->name('user-management.')->group(function () {
     Route::post('tambah', [UserManagementController::class, 'simpanSiswa'])->name('simpan-siswa');
     Route::get('edit-siswa/{id}', [UserManagementController::class, 'editSiswa'])->name('edit-siswa');
     Route::post('edit-siswa/{id}', [UserManagementController::class, 'updateSiswa'])->name('update-siswa');
+    Route::delete('delete-siswa/{id}', [UserManagementController::class, 'destroySiswa'])->name('udestroy-siswa');
 
 
     #GURU

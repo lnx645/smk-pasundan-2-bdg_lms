@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-// ... imports yang sudah ada
 import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
+import { toast } from 'vue-sonner'; // Pastikan import ini ada
 //@ts-ignore
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
+
 const page = usePage().props as any;
 const userList = computed(() => {
     return page.users?.data || [];
@@ -18,6 +19,28 @@ const links = computed(() => {
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 
 const search = ref('');
+
+// --- TAMBAHAN KODE DELETE ---
+const handleDelete = (user: any) => {
+    // Konfirmasi sederhana
+    if (!confirm(`Apakah Anda yakin ingin menghapus siswa ${user.name}?`)) {
+        return;
+    }
+
+    router.delete(UserManagementController.destroySiswa({ id: user.siswa.nis }).url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Data siswa berhasil dihapus');
+        },
+        onError: (errors: any) => {
+            if (page.flash?.error) {
+                toast.error(page.flash.error);
+            } else {
+                toast.error('Gagal menghapus data. Siswa mungkin memiliki data terkait.');
+            }
+        },
+    });
+};
 </script>
 
 <template>
@@ -56,6 +79,7 @@ const search = ref('');
                         <th class="px-6 py-4 text-right font-semibold">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y divide-gray-100 border-t border-gray-100">
                     <tr v-for="user in userList" :key="user.id" class="hover:bg-gray-50/50">
                         <td class="px-6 py-4">
@@ -79,18 +103,19 @@ const search = ref('');
 
                         <td class="px-6 py-4">
                             <span class="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                {{ user.kelas.nama || 'X RPL 1' }}
+                                {{ user.kelas?.nama || '-' }}
                             </span>
                         </td>
 
                         <td class="px-6 py-4 text-center">
                             <span
                                 class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                :class="user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                :class="user.siswa.status === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
                             >
                                 {{ user.siswa.status }}
                             </span>
                         </td>
+
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-2">
                                 <button
@@ -105,7 +130,12 @@ const search = ref('');
                                 >
                                     <Pencil class="h-4 w-4" />
                                 </button>
-                                <button class="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600">
+
+                                <button
+                                    @click="handleDelete(user)"
+                                    class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                    title="Hapus Siswa"
+                                >
                                     <Trash2 class="h-4 w-4" />
                                 </button>
                             </div>

@@ -11,6 +11,7 @@ use App\Models\Pengajaran;
 use App\Models\Siswa;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,37 @@ use Inertia\Inertia;
 
 class UserManagementController extends Controller
 {
+    public function destroySiswa($id)
+    {
+        try {
+            $siswa = Siswa::where('nis', $id)->firstOrFail();
+            $user = $siswa->user; // Ambil relasi user sebelum siswa dihapus
+
+            // 1. Hapus Foto jika ada (Opsional, bersihkan storage)
+            if ($siswa->pas_photo) {
+                Storage::disk('public')->delete($siswa->pas_photo);
+            }
+
+            // 2. Coba Hapus Siswa
+            // Jika siswa terpakai di tabel lain (cth: tabel_nilai), 
+            // database akan melempar error QueryException karena Foreign Key.
+            $siswa->delete();
+
+            // 3. Hapus Akun User login terkait (jika desainnya 1 siswa = 1 user)
+            if ($user) {
+                $user->delete();
+            }
+
+            return back()->with('success', 'Data siswa dan akun berhasil dihapus.');
+        } catch (QueryException $e) {
+            // Error Code 23000 adalah integrity constraint violation (Foreign Key)
+            if ($e->getCode() == "23000") {
+                return back()->with('error', 'Gagal menghapus! Siswa ini masih memiliki data terkait (Nilai/Absensi/dll).');
+            }
+
+            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
+    }
     public function editSiswa(string $id)
     {
         $siswa = Siswa::with('user')->findOrFail($id);
