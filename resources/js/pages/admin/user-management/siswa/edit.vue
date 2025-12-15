@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController'; // Sesuaikan path
+import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
-import { useForm } from '@inertiajs/vue3';
-import { Camera, Save, ArrowLeft, RefreshCw } from 'lucide-vue-next';
-import { computed, ref, watch, onMounted } from 'vue';
+import { Link, useForm } from '@inertiajs/vue3';
+import { ArrowLeft, Camera, RefreshCw, Save } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
-import { Link } from '@inertiajs/vue3';
 
 const props = defineProps<{
     kelasList: { id: number; nama: string; tingkat: string }[];
@@ -14,16 +13,15 @@ const props = defineProps<{
 
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }, { label: 'Siswa' }, { label: 'Edit' }];
 
-
 const form = useForm({
-    name: props.siswa.user?.name || props.siswa.name || '', 
+    name: props.siswa.user?.name || props.siswa.name || '',
     nis: props.siswa.nis,
     jenis_kelamin: props.siswa.jenis_kelamin,
     agama: props.siswa.agama,
     tahun_masuk: props.siswa.tahun_masuk,
     tingkat: props.siswa.tingkat,
     kelas_id: props.siswa.kelas_id,
-    status: props.siswa.status, // Pastikan casing (Aktif/Non-aktif) sesuai DB
+    status: props.siswa.status,
     pas_photo: null as File | null,
 });
 
@@ -34,25 +32,26 @@ const filteredKelas = computed(() => {
 watch(
     () => form.tingkat,
     (newVal, oldVal) => {
-        // Cek agar tidak reset saat pertama kali load component
         if (oldVal !== undefined && newVal != props.siswa.tingkat) {
             form.kelas_id = '';
         }
-    }
+    },
 );
 
-const photoPreview = ref<string | null>(props.siswa.foto_url || null);
+// PERBAIKAN: Default null. Jangan isi dengan data DB di sini.
+// Biarkan template yang memisahkan antara preview vs data DB.
+const photoPreview = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const handlePhotoChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files[0]) {
         const file = target.files[0];
-        
+
         // Validasi ukuran client-side
-        if(file.size > 2048 * 1024) {
-             toast.error('Ukuran file terlalu besar (Max 2MB)');
-             return;
+        if (file.size > 2048 * 1024) {
+            toast.error('Ukuran file terlalu besar (Max 2MB)');
+            return;
         }
 
         form.pas_photo = file;
@@ -70,32 +69,37 @@ const triggerFileInput = () => {
 };
 
 const submit = () => {
-       form.post(UserManagementController.updateSiswa({
-        id:props.siswa.nis
-    }).url), {
-        preserveScroll: true,
-        onSuccess: () => {
-            toast.success('Data siswa berhasil diperbarui!', {
-                position: 'top-center',
-            });
-            form.pas_photo = null; 
+    // Gunakan POST, tapi payloadnya mengandung _method: PUT
+    form.post(
+        UserManagementController.updateSiswa({
+            id: props.siswa.nis,
+        }).url,
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Data siswa berhasil diperbarui!', {
+                    position: 'top-center',
+                });
+                form.pas_photo = null;
+                photoPreview.value = null; // Reset preview agar kembali menampilkan data DB (yang baru)
+            },
+            onError: (errors: any) => {
+                toast.error('Gagal memperbarui data. Periksa inputan Anda.', {
+                    position: 'top-center',
+                });
+                console.error(errors);
+            },
         },
-        onError: (errors:any) => {
-            toast.error('Gagal memperbarui data. Periksa inputan Anda.', {
-                position: 'top-center',
-            });
-            console.error(errors);
-        },
-    };
+    );
 };
 </script>
 
 <template>
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-1">
+    <div class="mb-6 flex flex-col gap-4 px-1 sm:flex-row sm:items-center sm:justify-between">
         <Breadcrumb :items="breadcrumbs" />
-        
+
         <Link
-            :href="UserManagementController.siswa().url" 
+            :href="UserManagementController.siswa().url"
             class="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-50"
         >
             <ArrowLeft class="h-4 w-4" />
@@ -103,7 +107,7 @@ const submit = () => {
         </Link>
     </div>
 
-    <div class="pb-10 px-4">
+    <div class="px-4 pb-10">
         <form @submit.prevent="submit" class="flex flex-col gap-6 lg:flex-row">
             <div class="w-full lg:w-1/4">
                 <div class="sticky top-6 flex flex-col items-center rounded-xl border border-neutral-200 bg-white p-6 text-center shadow-sm">
@@ -115,6 +119,8 @@ const submit = () => {
                         @click="triggerFileInput"
                     >
                         <img v-if="photoPreview" :src="photoPreview" class="h-full w-full object-cover" />
+
+                        <img v-else-if="props.siswa.pas_photo" :src="`/storage/${props.siswa.pas_photo}`" class="h-full w-full object-cover" />
 
                         <div
                             v-else

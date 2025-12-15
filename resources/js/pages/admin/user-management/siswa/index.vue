@@ -2,10 +2,8 @@
 // ... imports yang sudah ada
 import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
-import { getInitials } from '@/lib/utils';
-import { router } from '@inertiajs/vue3';
-import { Link, usePage } from '@inertiajs/vue3';
-import { MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 //@ts-ignore
 import Avatar from 'vue3-avatar';
@@ -47,7 +45,7 @@ const search = ref('');
             </div>
         </div>
 
-        <div class="mx-4   rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="mx-4 rounded-xl border border-gray-200 bg-white shadow-sm">
             <table class="w-full text-left text-sm text-gray-500">
                 <thead class="bg-gray-50 text-xs text-gray-700 uppercase">
                     <tr>
@@ -62,8 +60,11 @@ const search = ref('');
                     <tr v-for="user in userList" :key="user.id" class="hover:bg-gray-50/50">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                                    <Avatar :name="user.name" alt="" />
+                                <div
+                                    class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-xs font-bold text-indigo-700"
+                                >
+                                    <Avatar v-if="!user.siswa.pas_photo" :name="user.name" alt="" />
+                                    <img :alt="user.name" v-else :src="`/storage/${user.siswa.pas_photo}`" />
                                 </div>
                                 <div class="font-medium text-gray-900">{{ user.name }}</div>
                             </div>
@@ -92,9 +93,16 @@ const search = ref('');
                         </td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-2">
-                                <button @click="router.visit(UserManagementController.editSiswa({
-                                    id : user.siswa.nis
-                                }).url)" class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-indigo-600">
+                                <button
+                                    @click="
+                                        router.visit(
+                                            UserManagementController.editSiswa({
+                                                id: user.siswa.nis,
+                                            }).url,
+                                        )
+                                    "
+                                    class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-indigo-600"
+                                >
                                     <Pencil class="h-4 w-4" />
                                 </button>
                                 <button class="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600">

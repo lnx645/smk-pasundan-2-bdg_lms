@@ -14,10 +14,16 @@ class Kelas extends Model
         'nama',
         'tingkat',
     ];
-    public function siswa(){
+    public function siswa()
+    {
         return $this->hasMany(Siswa::class);
     }
-    public function matpel(){
-        return $this->belongsToMany(Matpel::class,'pengajarans','kelas_id','matpel_kode');
+    public function matpel()
+    {
+        return $this->belongsToMany(Matpel::class, 'pengajarans', 'kelas_id', 'matpel_kode');
+    }
+    public function pengajarans()
+    {
+        return $this->hasMany(Pengajaran::class, 'kelas_id', 'id');
     }
 }

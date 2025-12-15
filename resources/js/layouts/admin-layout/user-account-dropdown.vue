@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { onClickOutside } from '@vueuse/core';
-import { Link, usePage } from '@inertiajs/vue3'; // Sesuaikan dengan router Anda (misal vue-router)
-import {
-    User,
-    Settings,
-    LogOut,
-    ChevronDown
-} from 'lucide-vue-next';
-import Avatar from '@/components/avatar.vue';
 import { logout } from '@/actions/App/Http/Controllers/LoginController';
+import Avatar from '@/components/avatar.vue';
 import { getInitials } from '@/lib/utils';
+import { Link, usePage } from '@inertiajs/vue3'; // Sesuaikan dengan router Anda (misal vue-router)
+import { onClickOutside } from '@vueuse/core';
+import { ChevronDown, LogOut } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 const isDropdownOpen = ref(false);
 const dropdownRef = ref(null);
@@ -23,15 +18,14 @@ const toggleDropdown = () => {
     isDropdownOpen.value = !isDropdownOpen.value;
 };
 
-
-const page = usePage()
-const user = computed(()=>{
+const page = usePage();
+const user = computed(() => {
     const data = page.props.auth.user;
     return {
         ...data,
-        initial :getInitials(data.name),
+        initial: getInitials(data.name),
     };
-})
+});
 </script>
 
 <template>
@@ -66,9 +60,9 @@ const user = computed(()=>{
                         <p class="truncate text-xs text-gray-500">{{ user.email }}</p>
                     </div>
 
-                    <div class="py-1">
+                    <!-- <div class="py-1">
                         <Link
-                            href="/profile"
+                            :href="ProfileController()"
                             class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
                         >
                             <User :size="18" />
@@ -81,7 +75,7 @@ const user = computed(()=>{
                             <Settings :size="18" />
                             Pengaturan Akun
                         </Link>
-                    </div>
+                    </div> -->
 
                     <div class="my-1 h-px bg-gray-100"></div>
 

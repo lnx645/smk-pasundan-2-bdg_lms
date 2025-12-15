@@ -33,7 +33,7 @@
                     </p>
                     <hr class="my-3 text-neutral-100" />
 
-                    <Link href="" class="py-1 text-sm hover:text-primary"> Profil Saya </Link>
+                    <Link :href="ProfileController()" class="py-1 text-sm hover:text-primary"> Profil Saya </Link>
 
                     <Link href="" method="post" class="py-1 text-sm text-red-600 hover:text-red-700"> Logout </Link>
                 </div>
@@ -47,6 +47,7 @@
 </template>
 
 <script setup lang="ts">
+import ProfileController from '@/actions/App/Http/Controllers/ProfileController';
 import Avatar from '@/components/avatar.vue';
 import { Link } from '@inertiajs/vue3';
 import { onClickOutside } from '@vueuse/core';
