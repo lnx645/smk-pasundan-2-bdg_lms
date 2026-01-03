@@ -24,6 +24,8 @@ Route::prefix('user-management')->name('user-management.')->group(function () {
     Route::get('edit-siswa/{id}', [UserManagementController::class, 'editSiswa'])->name('edit-siswa');
     Route::post('edit-siswa/{id}', [UserManagementController::class, 'updateSiswa'])->name('update-siswa');
     Route::delete('delete-siswa/{id}', [UserManagementController::class, 'destroySiswa'])->name('udestroy-siswa');
+    Route::get('siswa/template', [UserManagementController::class, 'downloadTemplateSiswa'])->name('templateSiswa');
+    Route::post('siswa/import', [UserManagementController::class, 'importSiswa'])->name('importSiswa');
     ## USER
     Route::get('create-user', [UserManagementController::class, 'createUser'])->name('createUser'); // List
     Route::get('edit-user/{id}', [UserManagementController::class, 'editUser'])->name('editUser'); // List
@@ -40,6 +42,8 @@ Route::prefix('user-management')->name('user-management.')->group(function () {
     Route::post('guru-add-matpel', [UserManagementController::class, 'addMatpelToGuru'])->name('guru-add-matpel');
     Route::get('edit-guru/{id}', [UserManagementController::class, 'editGuru'])->name('editGuru');
     Route::post('edit-guru/{id}', [UserManagementController::class, 'updateGuru'])->name('updateGuru');
+    Route::get('guru/template', [UserManagementController::class, 'downloadTemplateGuru'])->name('templateGuru');
+    Route::post('guru/import', [UserManagementController::class, 'importGuru'])->name('importGuru');
 });
 
 Route::prefix('laporan')->name('laporan.')->group(function () {

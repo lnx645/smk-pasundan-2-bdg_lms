@@ -2,39 +2,68 @@
 import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
-import { toast } from 'vue-sonner'; // Pastikan import ini ada
+import { Pencil, Plus, Search, Trash2, FileSpreadsheet } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 //@ts-ignore
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
+import Modal from '@/components/ui/modal.vue';
+import ImportSiswaModal from './import-modal-siswa.vue';
+import { debounce } from 'lodash';
 
-const page = usePage().props as any;
+const props = defineProps<{
+    users: any;
+    filters: { search?: string };
+}>();
+
+// 3. Update computed untuk mengambil dari 'props', bukan 'page'
 const userList = computed(() => {
-    return page.users?.data || [];
+    return props.users?.data || [];
 });
+
 const links = computed(() => {
-    return page.users?.links || [];
+    return props.users?.links || [];
 });
+
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 
-const search = ref('');
+const search = ref(props.filters?.search || '');
+const showImportModal = ref(false);
 
-// --- TAMBAHAN KODE DELETE ---
+watch(
+    search,
+    debounce((value: string) => {
+        router.get(
+            UserManagementController.siswa().url, 
+            { search: value },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            }
+        );
+    }, 300)
+);
+
+// Logic Delete
 const handleDelete = (user: any) => {
-    // Konfirmasi sederhana
     if (!confirm(`Apakah Anda yakin ingin menghapus siswa ${user.name}?`)) {
         return;
     }
 
+    // Gunakan router.delete biasa. Inertia otomatis refresh props setelah sukses.
     router.delete(UserManagementController.destroySiswa({ id: user.siswa.nis }).url, {
         preserveScroll: true,
+        // preserveState: false, // Opsional: set false jika ingin memaksa state refresh total, tapi biasanya true sudah cukup jika pakai defineProps
         onSuccess: () => {
             toast.success('Data siswa berhasil dihapus');
         },
         onError: (errors: any) => {
-            if (page.flash?.error) {
-                toast.error(page.flash.error);
+            // Ambil flash error dari usePage() untuk notifikasi (ini aman pakai usePage)
+            const page = usePage(); 
+            if ((page.props.flash as any)?.error) {
+                toast.error((page.props.flash as any).error);
             } else {
                 toast.error('Gagal menghapus data. Siswa mungkin memiliki data terkait.');
             }
@@ -53,10 +82,18 @@ const handleDelete = (user: any) => {
                     <input
                         v-model="search"
                         type="text"
-                        placeholder="Cari siswa..."
+                        placeholder="Cari siswa (Nama/NIS)..."
                         class="h-10 w-full rounded-lg border border-gray-200 bg-white pr-4 pl-10 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 sm:w-64"
                     />
                 </div>
+
+                <button
+                    @click="showImportModal = true"
+                    class="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                    <FileSpreadsheet class="h-4 w-4 text-green-600" />
+                    <span>Import Excel</span>
+                </button>
 
                 <Link
                     :href="UserManagementController.tambahSiswa()"
@@ -150,5 +187,9 @@ const handleDelete = (user: any) => {
         </div>
 
         <Paging class="px-4" :links="links" />
+
+        <Modal :isOpen="showImportModal" @close="showImportModal = false">
+            <ImportSiswaModal @close="showImportModal = false" />
+        </Modal>
     </div>
 </template>

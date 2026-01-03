@@ -60,7 +60,7 @@ const updatePassword = () => {
 // Helper URL Foto
 const getUserPhoto = () => {
     if (photoPreview.value) return photoPreview.value;
-    return props.user.siswa.pas_photo
+    return props.user.siswa?.pas_photo
         ? `/storage/${props.user.siswa.pas_photo}`
         : `https://ui-avatars.com/api/?name=${props.user.name}&background=EBF4FF&color=7F9CF5`;
 };

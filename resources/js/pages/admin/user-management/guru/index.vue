@@ -2,22 +2,33 @@
 import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { BookOpen, Eye, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next'; // Tambah icon Eye & X
+import { BookOpen, Eye, Pencil, Plus, Search, Trash2, FileSpreadsheet } from 'lucide-vue-next'; 
 import { computed, ref, watch } from 'vue';
 //@ts-ignore
 import Avatar from 'vue3-avatar';
 import Modal from '@/components/ui/modal.vue';
 import { debounce } from 'lodash';
-import Paging from '../paging.vue';
+import Paging from '@/components/paging.vue'; // Pastikan path paging benar
 import PenugasanGuru from './penugasan-guru.vue';
+// 2. Import Modal Import
+import ImportGuruModal from './import-modal.vue';
+
+// Define Props agar data reaktif & search tidak hilang
+const props = defineProps<{
+    users: any;
+    filters: { search?: string };
+}>();
 
 const page = computed(() => usePage().props as any);
-const userList = computed(() => page.value.users?.data || []);
-const links = computed(() => page.value.users?.links || []);
-const breadcrumbs = [{ label: 'Dashboard' }, { label: 'Manajemen Guru' }];
-const search = ref(page.value.filters?.search || '');
+const userList = computed(() => props.users?.data || []); // Gunakan props
+const links = computed(() => props.users?.links || []);   // Gunakan props
 
-const showModal = ref(false);
+const breadcrumbs = [{ label: 'Dashboard' }, { label: 'Manajemen Guru' }];
+const search = ref(props.filters?.search || '');
+
+// State Modal
+const showModal = ref(false); // Modal Penugasan
+const showImportModal = ref(false); // 3. State Modal Import
 const selectedUser = ref<any>(null);
 
 const openAssignmentModal = (user: any) => {
@@ -32,10 +43,12 @@ const closeModal = () => {
     }, 200);
 };
 
+// Search Logic
 watch(
     search,
     debounce((value: string) => {
         router.get(
+            // Pastikan URL ini benar. Jika pakai ziggy: route('user-management.guru')
             UserManagementController.guru().url, 
             { search: value }, 
             { 
@@ -52,7 +65,16 @@ watch(
     <div class="relative min-h-screen w-full bg-gray-50/50 pb-12 font-sans">
         <div class="mb-8 flex flex-col justify-between gap-4 px-1 sm:flex-row sm:items-end">
             <Breadcrumb :items="breadcrumbs"  />
+            
             <div class="flex flex-col gap-2 sm:flex-row">
+                <button
+                    @click="showImportModal = true"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50"
+                >
+                    <FileSpreadsheet class="h-4 w-4 text-green-600" />
+                    <span>Import Excel</span>
+                </button>
+
                 <Link
                     :href="UserManagementController.tambahGuru()"
                     class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700"
@@ -73,7 +95,7 @@ watch(
                         v-model="search"
                         type="text"
                         class="block w-full rounded-lg border-0 bg-gray-50 py-2.5 pl-10 text-sm ring-1 ring-gray-200 ring-inset focus:ring-2 focus:ring-indigo-600"
-                        placeholder="Cari data guru..."
+                        placeholder="Cari Nama / NIP / Email..."
                     />
                 </div>
             </div>
@@ -85,7 +107,7 @@ watch(
                             <th class="px-6 py-4 font-medium">Informasi Guru</th>
                             <th class="px-6 py-4 font-medium">NIP</th>
                             <th class="px-6 py-4 font-medium">Penugasan</th>
-                            <th class="px-6 py-4 font-medium">Keahlian UTama Utama</th>
+                            <th class="px-6 py-4 font-medium">Keahlian Utama</th>
                             <th class="px-6 py-4 text-center font-medium">Status</th>
                             <th class="px-6 py-4 text-right font-medium">Aksi</th>
                         </tr>
@@ -95,7 +117,7 @@ watch(
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
                                     <div class="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full shadow-sm ring-2 ring-white">
-                                        <Avatar :imageSrc="user.guru.foto" :name="user.nama || user.name" class="h-full w-full object-cover" />
+                                        <Avatar :imageSrc="user.guru?.foto" :name="user.nama || user.name" class="h-full w-full object-cover" />
                                     </div>
                                     <div class="font-monospace">
                                         <div class="font-semibold text-gray-900">{{ user.nama || user.name }}</div>
@@ -115,22 +137,28 @@ watch(
                                         <div class="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
                                             <BookOpen class="h-3 w-3" />
                                         </div>
-                                        <span>{{ user.guru.pengajarans.length }} Kelas Diampu</span>
+                                        <span>{{ user.guru?.pengajarans?.length || 0 }} Kelas Diampu</span>
                                         <Eye class="h-3 w-3 text-gray-400" />
                                     </button>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-gray-600">{{ user.guru?.spesialis_matpel?.nama || '-' }}</td>
+                            
+                            <td class="px-6 py-4 text-gray-600">
+                                <span v-if="user.guru?.matpel">
+                                    {{ user.guru.matpel.nama }} 
+                                </span>
+                                <span v-else class="text-gray-400 italic">-</span>
+                            </td>
 
                             <td class="px-6 py-4 text-center">
                                 <span
                                     class="inline-flex capitalize items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
                                     :class="
-                                        user.guru.status == 'aktif' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-red-50 text-red-700 ring-red-600/10'
+                                        user.guru?.status == 'aktif' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-red-50 text-red-700 ring-red-600/10'
                                     "
                                 >
-                                    <span class="h-1.5 w-1.5 rounded-full" :class="user.guru.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'"></span>
-                                    {{ user.guru.status }}
+                                    <span class="h-1.5 w-1.5 rounded-full" :class="user.guru?.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                                    {{ user.guru?.status }}
                                 </span>
                             </td>
 
@@ -145,6 +173,11 @@ watch(
                                 </div>
                             </td>
                         </tr>
+                        <tr v-if="userList.length === 0">
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                Tidak ada data guru ditemukan.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -152,14 +185,18 @@ watch(
                 <Paging :links="links" />
             </div>
         </div>
+
         <Modal :isOpen="showModal" @close="closeModal">
             <PenugasanGuru @closeModal="closeModal" :selectedUser="selectedUser" />
+        </Modal>
+
+        <Modal :isOpen="showImportModal" @close="showImportModal = false">
+            <ImportGuruModal @close="showImportModal = false" />
         </Modal>
     </div>
 </template>
 
 <style scoped>
-/* Opsional: Scrollbar halus untuk modal list */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
