@@ -15,15 +15,17 @@ class Nilai extends Model
         'tugas_id',
         'siswa_id',
         'jawaban_id',
-        'angka', 
+        'angka',
         'komentar'
     ];
+
     public function siswa()
     {
-        return $this->belongsTo(User::class, 'siswa_id');
+        return $this->belongsTo(Siswa::class, 'siswa_id');
     }
+
     public function tugas()
     {
-        return $this->belongsTo(Tugas::class, 'tugas_id', 'tugasID');
+        return $this->belongsTo(Tugas::class, 'tugas_id');
     }
 }

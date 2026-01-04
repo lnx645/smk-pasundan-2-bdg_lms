@@ -79,7 +79,7 @@ const submit = () => {
 <template>
     <Breadcrumb :items="breadcrumbs" />
 
-    <div class="px-4 pb-10 mt-3">
+    <div class="mt-3 px-4 pb-10">
         <form @submit.prevent="submit" class="flex flex-col gap-6 lg:flex-row">
             <div class="w-full lg:w-1/4">
                 <div class="sticky top-6 flex flex-col items-center rounded-xl border border-neutral-200 bg-white p-6 text-center shadow-sm">
@@ -136,7 +136,7 @@ const submit = () => {
                             </div>
 
                             <div>
-                                <label class="mb-1.5 block text-xs font-medium text-neutral-700">NIS</label>
+                                <label class="mb-1.5 block text-xs font-medium text-neutral-700">NIS <sup class="text-red-500">*</sup> </label>
                                 <input
                                     v-model="form.nis"
                                     type="number"
@@ -215,14 +215,30 @@ const submit = () => {
 
                             <div class="col-span-1 md:col-span-2">
                                 <label class="mb-1.5 block text-xs font-medium text-neutral-700">Status Siswa</label>
-                                <div class="flex items-center gap-6 pt-1">
+                                <div class="flex flex-wrap items-center gap-6 pt-1">
                                     <label class="flex cursor-pointer items-center gap-2 text-sm text-neutral-600 transition hover:text-indigo-600">
-                                        <input type="radio" v-model="form.status" value="Aktif" class="text-indigo-600 focus:ring-indigo-500" />
+                                        <input type="radio" v-model="form.status" value="aktif" class="text-indigo-600 focus:ring-indigo-500" />
                                         <span class="font-medium">Aktif</span>
                                     </label>
+
                                     <label class="flex cursor-pointer items-center gap-2 text-sm text-neutral-600 transition hover:text-indigo-600">
-                                        <input type="radio" v-model="form.status" value="Non-aktif" class="text-indigo-600 focus:ring-indigo-500" />
-                                        <span class="font-medium">Non-aktif</span>
+                                        <input type="radio" v-model="form.status" value="lulus" class="text-indigo-600 focus:ring-indigo-500" />
+                                        <span class="font-medium">Lulus</span>
+                                    </label>
+
+                                    <label class="flex cursor-pointer items-center gap-2 text-sm text-neutral-600 transition hover:text-indigo-600">
+                                        <input type="radio" v-model="form.status" value="keluar" class="text-indigo-600 focus:ring-indigo-500" />
+                                        <span class="font-medium">Keluar</span>
+                                    </label>
+
+                                    <label class="flex cursor-pointer items-center gap-2 text-sm text-neutral-600 transition hover:text-indigo-600">
+                                        <input
+                                            type="radio"
+                                            v-model="form.status"
+                                            value="tinggal_kelas"
+                                            class="text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <span class="font-medium">Tinggal Kelas</span>
                                     </label>
                                 </div>
                             </div>

@@ -17,13 +17,15 @@ class AkademikController extends Controller
         return Inertia::render('admin/akademik/create', [
             'matpels' => Matpel::select('kode', 'nama')->orderBy('nama')->get(),
 
-            'gurus' => Guru::with('user')
+            'gurus' => Guru::with(['user', 'spesialisMatpel'])
                 ->has('user')
                 ->get()
                 ->map(function ($guru) {
                     return [
                         'nip' => $guru->nip,
                         'nama' => $guru->user?->nama ?? $guru->user?->name ?? 'Tanpa Nama',
+                        'keahlian_utama' => $guru?->spesialisMatpel?->nama ?? '',
+                        'keahlian_utama_kode' =>  $guru?->spesialisMatpel?->kode ?? null,
                     ];
                 }),
 

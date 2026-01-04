@@ -142,38 +142,52 @@
                     </td>
                     <td class="text-center">{{ $guru->jenis_kelamin }}</td>
                     <td>
-                        @if ($guru->matpels && $guru->matpels->count() > 0)
-                            <ul style="margin: 0; padding-left: 15px; list-style-type: square;">
-                                @foreach ($guru->matpels as $mapel)
-                                    <li>{{ $mapel->nama ?? $mapel->kode }}</li>
+                        {{-- LOGIKA BARU UNTUK MENAMPILKAN MAPEL & KELAS --}}
+                        @if ($guru->pengajarans && $guru->pengajarans->count() > 0)
+                            <ul style="margin: 0; padding-left: 15px;">
+                                {{-- 1. Kelompokkan Pengajaran berdasarkan Nama Mapel --}}
+                                @foreach ($guru->pengajarans->groupBy('matpel.nama') as $namaMapel => $listPengajaran)
+                                    <li style="margin-bottom: 4px;">
+                                        <strong>{{ $namaMapel ?? 'Mapel Tanpa Nama' }}</strong>
+                                        <br>
+                                        {{-- 2. Tampilkan list kelas untuk mapel tersebut --}}
+                                        <span style="font-size: 10px; color: #555;">
+                                            Kelas:
+                                            @foreach ($listPengajaran as $p)
+                                                {{ $p->kelas->nama ?? '-' }}@if (!$loop->last)
+                                                    ,
+                                                @endif
+                                            @endforeach
+                                        </span>
+                                    </li>
                                 @endforeach
                             </ul>
                         @else
-                            <span style="color: #888; font-style: italic;">- Tidak ada -</span>
+                            <span style="color: #888; font-style: italic;">- Tidak ada jadwal -</span>
                         @endif
                     </td>
                     <td class="text-center" style="text-transform: uppercase; font-size: 10px; font-weight: bold;">
                         {{ $guru->status }}
                     </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="6" class="text-center" style="padding: 20px;">Data guru tidak tersedia.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 20px;">Data guru tidak tersedia.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
 
-    <div class="ttd-wrapper">
-        <div class="ttd">
-            <p>Bandung, {{ $tanggal }}</p>
-            <p>Kepala Sekolah</p>
-            <br><br><br><br>
-            <p style="text-decoration: underline; font-weight: bold;">Nama Kepala Sekolah</p>
-            <p>NIP. 19800101 200001 1 001</p>
+        <div class="ttd-wrapper">
+            <div class="ttd">
+                <p>Bandung, {{ $tanggal }}</p>
+                <p>Kepala Sekolah</p>
+                <br><br><br><br>
+                <p style="text-decoration: underline; font-weight: bold;">Nama Kepala Sekolah</p>
+                <p>NIP. 19800101 200001 1 001</p>
+            </div>
         </div>
-    </div>
 
-</body>
+    </body>
 
-</html>
+    </html>

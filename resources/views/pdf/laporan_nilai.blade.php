@@ -4,7 +4,7 @@
 <head>
     <title>Laporan Data Nilai</title>
     <style>
-        /* SETUP HALAMAN & FONT (Sama dengan Siswa/Guru/Kelas) */
+        /* SETUP HALAMAN */
         @page {
             margin: 1cm 1.5cm;
         }
@@ -12,7 +12,7 @@
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12px;
-            line-height: 1.4;
+            line-height: 1.3;
         }
 
         /* KOP SURAT */
@@ -25,40 +25,20 @@
 
         .kop-surat td {
             border: none;
-        }
-
-        .institusi {
-            text-align: center;
-        }
-
-        .institusi h1 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .institusi h2 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .alamat {
-            font-size: 11px;
-            font-style: italic;
+            vertical-align: middle;
         }
 
         /* JUDUL LAPORAN */
         .judul-laporan {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .judul-laporan h3 {
             margin: 0;
             text-decoration: underline;
             text-transform: uppercase;
+            font-size: 14px;
         }
 
         /* TABEL DATA */
@@ -72,6 +52,8 @@
             border: 1px solid #000;
             padding: 6px 8px;
             vertical-align: top;
+            text-align: left;
+            /* Default rata kiri */
         }
 
         .tabel-data th {
@@ -80,12 +62,23 @@
             text-align: center;
         }
 
+        /* Mencegah baris tabel terpotong saat ganti halaman */
+        .tabel-data tr {
+            page-break-inside: avoid;
+        }
+
+        /* Utility Classes */
         .text-center {
-            text-align: center;
+            text-align: center !important;
         }
 
         .text-bold {
             font-weight: bold;
+        }
+
+        .text-muted {
+            color: #666;
+            font-size: 10px;
         }
 
         /* Zebra Striping */
@@ -93,17 +86,15 @@
             background-color: #f9f9f9;
         }
 
-        /* Styling Khusus Nilai */
+        /* Styling Nilai */
         .nilai-bagus {
             color: black;
         }
 
         .nilai-jelek {
             color: red;
-            font-style: italic;
+            font-weight: bold;
         }
-
-        /* Contoh jika nilai < 75 */
 
         /* TANDA TANGAN */
         .ttd-wrapper {
@@ -113,7 +104,7 @@
 
         .ttd {
             float: right;
-            width: 30%;
+            width: 35%;
             text-align: center;
         }
     </style>
@@ -124,9 +115,7 @@
     <table class="kop-surat">
         <tr>
             <td width="15%" align="center">
-                <h2 style="border: 2px solid black; padding: 5px;">
-                    <img src="{{ base_path('resources/img/log.png') }}" alt="">
-                </h2>
+                <img src="{{ public_path('resources/img/log.png') }}" style="width: 70px; height: auto;">
             </td>
             @include('pdf.kop_surat')
         </tr>
@@ -134,6 +123,9 @@
 
     <div class="judul-laporan">
         <h3>REKAPITULASI NILAI SISWA</h3>
+        @if (isset($kelas_terpilih) && $kelas_terpilih != 'all')
+            <p style="margin: 2px 0;">Kelas: {{ $data_nilai->first()->siswa->kelas->nama ?? $kelas_terpilih }}</p>
+        @endif
         <p style="margin: 2px 0; font-size: 10px;">Dicetak pada: {{ $tanggal }}</p>
     </div>
 
@@ -142,9 +134,9 @@
             <tr>
                 <th width="5%">No</th>
                 <th width="25%">Nama Siswa</th>
-                <th width="30%">Tugas / Matpel / Kelas</th>
+                <th width="35%">Detail Tugas</th>
                 <th width="10%">Nilai</th>
-                <th>Komentar Guru</th>
+                <th>Komentar</th>
             </tr>
         </thead>
         <tbody>
@@ -154,18 +146,18 @@
                     <td>
                         <span class="text-bold">{{ $nilai->siswa->name ?? 'Siswa Terhapus' }}</span>
                         <br>
-                        <span style="font-size: 10px; color: #666;">
-                            {{ $nilai->siswa->email ?? '' }}
+                        <span class="text-muted">
+                            {{ $nilai->siswa->kelas->nama ?? '-' }} | {{ $nilai->siswa->nis ?? '-' }}
                         </span>
                     </td>
                     <td>
-                        {{ $nilai->tugas->title ?? ($nilai->tugas->nama ?? 'Tugas #' . $nilai->tugas_id) }}
-                        /
-                        {{ $nilai->tugas->matpel->nama }}
-                        /
-                        {{ $nilai->siswa->kelas['nama'] }}
+                        <span class="text-bold">{{ $nilai->tugas?->title ?? 'Tugas dihapus' }}</span>
+                        <br>
+                        <span class="text-muted">
+                            Mapel: {{ $nilai->tugas?->matpel?->nama ?? '-' }}
+                        </span>
                     </td>
-                    <td class="text-center text-bold" style="font-size: 14px;">
+                    <td class="text-center text-bold" style="font-size: 13px;">
                         <span class="{{ $nilai->angka < 75 ? 'nilai-jelek' : 'nilai-bagus' }}">
                             {{ $nilai->angka }}
                         </span>
@@ -176,7 +168,9 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center" style="padding: 20px;">Belum ada data nilai yang masuk.</td>
+                    <td colspan="5" class="text-center" style="padding: 20px;">
+                        <i>Belum ada data nilai yang sesuai filter.</i>
+                    </td>
                 </tr>
             @endforelse
         </tbody>
@@ -185,9 +179,10 @@
     <div class="ttd-wrapper">
         <div class="ttd">
             <p>Bandung, {{ $tanggal }}</p>
+            <p>Mengetahui,</p>
             <p>Waka Kurikulum</p>
-            <br><br><br><br>
-            <p style="text-decoration: underline; font-weight: bold;">Nama Pejabat</p>
+            <br><br><br>
+            <p style="text-decoration: underline; font-weight: bold;">(Nama Pejabat)</p>
             <p>NIP. .......................</p>
         </div>
     </div>
