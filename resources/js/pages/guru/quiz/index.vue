@@ -125,10 +125,10 @@ const formatDate = (dateString) => {
 
                 <div class="grid grid-cols-2 gap-3 border-t border-gray-100 bg-white p-4">
                     <Link
-                        :href="GuruQuizController.edit({ quiz: quiz.id }).url"
+                        :href="GuruQuizController.result({ quiz: quiz.id }).url"
                         class="rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                     >
-                        Edit
+                        Lihat Hasil
                     </Link>
                     <Link
                         :href="GuruQuizQuestionController.index({ quiz: quiz.id })"

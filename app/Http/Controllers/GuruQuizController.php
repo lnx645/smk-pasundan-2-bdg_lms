@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kelas;
 use App\Models\Pengajaran;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class GuruQuizController extends Controller
 {
@@ -67,5 +69,49 @@ class GuruQuizController extends Controller
 
         return to_route('guru.quiz.index', $quiz->id)
             ->with('success', 'Kuis berhasil dibuat. Silakan tambah soal!');
+    }
+    public function result(Request $request, Quiz $quiz)
+    {
+        $search = $request->input('search');
+        $kelasId = $request->input('kelas'); 
+
+        // 2. Query Attempts (Percobaan Siswa)
+        $attempts = $quiz->attempts()
+            ->with(['user', 'user.siswa.kelas'])
+            // Filter Search Nama
+            ->when($search, function ($q) use ($search) {
+                $q->whereHas('user', function ($u) use ($search) {
+                    $u->where('name', 'like', "%{$search}%");
+                });
+            })
+            // Filter Kelas (LOGIKA BARU)
+            ->when($kelasId, function ($q) use ($kelasId) {
+                $q->whereHas('user.siswa', function ($s) use ($kelasId) {
+                    $s->where('kelas_id', $kelasId);
+                });
+            })
+            ->latest('finished_at')
+            ->get();
+
+        $stats = [
+            'average' => $attempts->avg('score'),
+            'max' => $attempts->max('score'),
+            'min' => $attempts->min('score'),
+            'total_students' => $attempts->unique('user_id')->count(),
+            'passed' => $attempts->where('score', '>=', $quiz->passing_grade)->count(),
+        ];
+
+        $allKelas = Kelas::orderBy('nama', 'asc')->get(); // Sesuaikan nama kolom di DB (misal: nama_kelas)
+
+        return Inertia::render('guru/quiz/result', [
+            'quiz' => $quiz->load(['matpel', 'kelas']),
+            'attempts' => $attempts,
+            'stats' => $stats,
+            'allKelas' => $allKelas, // Kirim data kelas ke frontend
+            'filters' => [
+                'search' => $search,
+                'kelas' => $kelasId // Kirim state filter saat ini agar dropdown tidak reset
+            ]
+        ]);
     }
 }

@@ -60,6 +60,7 @@ Route::middleware('authenticated')->group(function () {
             Route::get('/quiz/{quiz}/edit', [GuruQuizController::class, 'edit'])->name('quiz.edit');
             Route::put('/quiz/{quiz}', [GuruQuizController::class, 'update'])->name('quiz.update');
             Route::delete('/quiz/{quiz}', [GuruQuizController::class, 'destroy'])->name('quiz.destroy');
+            Route::get('/quiz/{quiz}/result', [GuruQuizController::class, 'result'])->name('quiz.result');
             Route::get('/quiz/{quiz}/questions', [GuruQuizQuestionController::class, 'index'])
                 ->name('quiz.questions.index');
             Route::get('/quiz/{quiz}/questions', [GuruQuizQuestionController::class, 'index'])
