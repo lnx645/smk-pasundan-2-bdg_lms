@@ -5,10 +5,13 @@ use App\Http\Controllers\Guru\JawabanController;
 use App\Http\Controllers\Guru\NilaiController; // Pastikan ini sesuai
 use App\Http\Controllers\Guru\TugasController;
 use App\Http\Controllers\GuruMateriController;
+use App\Http\Controllers\GuruQuizController;
+use App\Http\Controllers\GuruQuizQuestionController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MateriController;
 use App\Http\Controllers\NotifServiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuizSiswaController;
 use App\Http\Controllers\TugasSiswaController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,10 +39,42 @@ Route::middleware('authenticated')->group(function () {
         Route::get('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'kerjakan'])->name('siswa.tugas.kerjakan');
         Route::put('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'kerjakanSimpan'])->name('siswa.tugas.kerjakan.kerjakanSimpan');
         Route::delete('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'batalkanPengumpulan'])->name('siswa.tugas.kerjakan.batalkanPengumpulan');
+
+        Route::get('/quiz', [QuizSiswaController::class, 'index'])->name('siswa.quiz.index');
+        Route::get('/quiz/{quiz}', [QuizSiswaController::class, 'show'])->name('siswa.quiz.show');
+        Route::post('/quiz/{quiz}/start', [QuizSiswaController::class, 'start'])->name('siswa.quiz.start');
+        Route::get('/quiz/work/{attempt}', [QuizSiswaController::class, 'work'])->name('siswa.quiz.work');
+        Route::post('/quiz/{attempt}/submit', [QuizSiswaController::class, 'submit'])->name('siswa.quiz.submit');
+        Route::get('/quiz/result/{attempt}', [QuizSiswaController::class, 'result'])->name('siswa.quiz.result');
     });
 
     // --- GURU ROUTES ---
     Route::middleware('authenticated:guru')->group(function () {
+
+
+
+        Route::prefix('guru')->name('guru.')->group(function () {
+            Route::get('/quiz', [GuruQuizController::class, 'index'])->name('quiz.index');
+            Route::get('/quiz/create', [GuruQuizController::class, 'create'])->name('quiz.create');
+            Route::post('/quiz', [GuruQuizController::class, 'store'])->name('quiz.store');
+            Route::get('/quiz/{quiz}/edit', [GuruQuizController::class, 'edit'])->name('quiz.edit');
+            Route::put('/quiz/{quiz}', [GuruQuizController::class, 'update'])->name('quiz.update');
+            Route::delete('/quiz/{quiz}', [GuruQuizController::class, 'destroy'])->name('quiz.destroy');
+            Route::get('/quiz/{quiz}/questions', [GuruQuizQuestionController::class, 'index'])
+                ->name('quiz.questions.index');
+            Route::get('/quiz/{quiz}/questions', [GuruQuizQuestionController::class, 'index'])
+                ->name('quiz.questions.index');
+
+            // Simpan soal baru
+            Route::post('/quiz/{quiz}/questions', [GuruQuizQuestionController::class, 'store'])
+                ->name('quiz.questions.store');
+
+            // Hapus soal (Perhatikan parameter binding-nya ke 'question')
+            Route::delete('/quiz/questions/{question}', [GuruQuizQuestionController::class, 'destroy'])
+                ->name('quiz.questions.destroy');
+        });
+
+
         // Materi
         Route::get('/guru/materi/{kelas_kode?}', [GuruMateriController::class, 'materi'])->name('guru.materi');
         Route::get('/guru/materi/{kelas_kode?}/tambah-materi', [GuruMateriController::class, 'tambahMateri'])->name('guru.materi.tambah');
