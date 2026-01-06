@@ -1,5 +1,5 @@
 <script setup>
-import { ArrowDownTrayIcon, ChevronLeftIcon, FunnelIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
+import { ChevronLeftIcon, FunnelIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
 import { Head, Link, router } from '@inertiajs/vue3';
 import debounce from 'lodash/debounce';
 import { ref, watch } from 'vue';
@@ -52,7 +52,7 @@ const formatDate = (dateString) => {
 <template>
     <Head :title="`Hasil - ${quiz.title}`" />
 
-    <div class="min-h-screen bg-gray-50 px-4 py-8 font-sans text-gray-900 sm:px-6 lg:px-8">
+    <div class="min-h-screen px-4 py-8 font-sans text-gray-900 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-7xl">
             <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -63,15 +63,6 @@ const formatDate = (dateString) => {
                         <h1 class="text-2xl font-bold text-gray-900">Hasil Kuis</h1>
                     </div>
                     <p class="mt-1 ml-9 text-sm text-gray-500">{{ quiz.title }}</p>
-                </div>
-
-                <div class="flex gap-3">
-                    <button
-                        class="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50"
-                    >
-                        <ArrowDownTrayIcon class="h-5 w-5 text-gray-400" />
-                        Export Excel
-                    </button>
                 </div>
             </div>
 
