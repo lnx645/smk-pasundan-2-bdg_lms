@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(AuthServiceInterface::class, AuthServiceImpl::class);
         $this->app->bind(KelasServiceInterface::class, KelasServiceImpl::class);
         $this->app->bind(MateriServiceInterface::class, MateriService::class);
-        $this->app->bind(MatpelServiceInterface::class,MatpelService::class);
+        $this->app->bind(MatpelServiceInterface::class, MatpelService::class);
     }
 
     /**
@@ -30,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (config('app.env') === 'production') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }
