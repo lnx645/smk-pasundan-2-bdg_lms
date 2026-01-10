@@ -46,7 +46,16 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
+        'gcs' => [
+            'driver' => 'gcs',
+            'key_file_path' => env('GCS_KEY_FILE', null), // path ke file JSON jika lokal
+            'key_file' => [], // Biarkan kosong jika di Cloud Run (menggunakan Service Account)
+            'project_id' => env('GCS_PROJECT_ID'),
+            'bucket' => env('GCS_BUCKET'),
+            'path_prefix' => env('GCS_PATH_PREFIX', null),
+            'storage_api_uri' => env('GCS_STORAGE_API_URI', null),
+            'visibility' => 'public',
+        ],
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
