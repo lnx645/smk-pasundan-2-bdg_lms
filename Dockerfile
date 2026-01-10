@@ -56,6 +56,5 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # 14. Expose port 8080
 EXPOSE 8080
-
 # 15. Jalankan Nginx dan PHP-FPM
 CMD service nginx start && php-fpm
