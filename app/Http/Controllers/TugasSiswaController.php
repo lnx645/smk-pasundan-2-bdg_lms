@@ -43,15 +43,15 @@ class TugasSiswaController extends Controller
         return back()->with('success', 'Pengumpulan tugas berhasil dibatalkan. Silakan upload ulang.');
     }
 
-    public function kerjakanSimpan(Request $request)
+    public function kerjakanSimpan(Request $request, string $id)
     {
         $request->validate([
-            'tugas_id' => 'required|exists:tugas,tugasID',
+            'tugas_id' => 'nullable|exists:tugas,tugasID',
             'jawaban_text' => 'nullable|string',
             'file' => 'nullable|file|max:10240',
         ]);
-
-        $tugas = Tugas::where('tugasID', $request->tugas_id)->firstOrFail();
+        $tugas_id = $request->tugas_id ?? $id;
+        $tugas = Tugas::where('tugasID', $tugas_id)->firstOrFail();
 
         if (now()->greaterThan($tugas->deadline)) {
             return back()->with('error', 'Maaf, batas waktu pengumpulan tugas sudah berakhir. Anda tidak dapat mengirim jawaban.');
@@ -62,10 +62,7 @@ class TugasSiswaController extends Controller
         $disk = $this->getActiveDisk();
 
         if ($request->hasFile('file')) {
-            // Simpan file ke folder 'jawaban-tugas' di disk yang aktif
             $path = $request->file('file')->store('jawaban-tugas', $disk);
-
-            // Generate URL berdasarkan disk
             if ($disk === 'gcs') {
                 $fileUrl = Storage::disk('gcs')->url($path);
             } else {
@@ -80,8 +77,8 @@ class TugasSiswaController extends Controller
             ],
             [
                 'jawaban' => $request->jawaban_text,
-                'file' => $path, // path relatif (misal: jawaban-tugas/abc.jpg)
-                'file_url' => $fileUrl // URL lengkap (https://... atau http://...)
+                'file' => $path,
+                'file_url' => $fileUrl
             ]
         );
 
