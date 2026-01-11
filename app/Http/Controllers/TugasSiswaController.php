@@ -72,7 +72,7 @@ class TugasSiswaController extends Controller
 
         JawabanTugas::updateOrCreate(
             [
-                'tugas_id' => $request->tugas_id,
+                'tugas_id' => $tugas_id,
                 'answered_by_id' => $request->user()->id,
             ],
             [
