@@ -37,8 +37,11 @@ class TugasSiswaController extends Controller
         // Hapus file dari storage (GCS atau Lokal)
         if ($jawaban->file) {
             $disk = $this->getActiveDisk();
-            if (Storage::disk($disk)->exists($jawaban->file)) {
-                Storage::disk($disk)->delete($jawaban->file);
+            try {
+                if (Storage::disk($disk)->exists($jawaban->file)) {
+                    Storage::disk($disk)->delete($jawaban->file);
+                }
+            } catch (\Throwable $th) {
             }
         }
 
