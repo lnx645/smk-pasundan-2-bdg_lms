@@ -16,7 +16,7 @@ class TugasSiswaController extends Controller
      */
     private function getActiveDisk()
     {
-        return 'gcs';
+        return env('GCS_BUCKET') ? 'gcs' : 'public';
     }
 
     public function batalkanPengumpulan(Request $request, string $id)
@@ -48,51 +48,45 @@ class TugasSiswaController extends Controller
 
     public function kerjakanSimpan(Request $request, string $id)
     {
-        try {
-            $request->validate([
-                'tugas_id' => 'nullable|exists:tugas,tugasID',
-                'jawaban_text' => 'nullable|string',
-                'file' => 'nullable|file|max:10240', // Max 10MB
-            ]);
+        $request->validate([
+            'tugas_id' => 'nullable|exists:tugas,tugasID',
+            'jawaban_text' => 'nullable|string',
+            'file' => 'nullable|file|max:10240', // Max 10MB
+        ]);
 
-            $tugas_id = $request->tugas_id ?? $id;
-            $tugas = Tugas::where('tugasID', $tugas_id)->firstOrFail();
-
-            // Cek Deadline
-            if (now()->greaterThan($tugas->deadline)) {
-                return back()->with('error', 'Maaf, batas waktu pengumpulan tugas sudah berakhir.');
-            }
-
-            $path = null;
-            $fileUrl = null;
-            $disk = $this->getActiveDisk();
-
-            if ($request->hasFile('file')) {
-                try {
-                    $path = $request->file('file')->store('jawaban-tugas', $disk);
-                    $fileUrl = Storage::disk($disk)->url($path);
-                } catch (Exception $e) {
-                    return back()->with('error', 'Gagal upload ke Cloud Storage: ' . $e->getMessage());
-                }
-            }
-
-            // Simpan atau update jawaban di database
-            JawabanTugas::updateOrCreate(
-                [
-                    'tugas_id' => $tugas_id,
-                    'answered_by_id' => $request->user()->id,
-                ],
-                [
-                    'jawaban' => $request->jawaban_text,
-                    'file' => $path,
-                    'file_url' => $fileUrl
-                ]
-            );
-
-            return back()->with('success', 'Tugas berhasil dikirim.');
-        } catch (\Throwable $th) {
-            die($th->getMessage());
+        $tugas_id = $request->tugas_id ?? $id;
+        $tugas = Tugas::where('tugasID', $tugas_id)->firstOrFail();
+        // Cek Deadline
+        if (now()->greaterThan($tugas->deadline)) {
+            return back()->with('error', 'Maaf, batas waktu pengumpulan tugas sudah berakhir.');
         }
+
+        $path = null;
+        $fileUrl = null;
+        $disk = $this->getActiveDisk();
+
+        if ($request->hasFile('file')) {
+            try {
+                $path = $request->file('file')->store('jawaban-tugas', $disk);
+                $fileUrl = Storage::disk($disk)->url($path);
+            } catch (Exception $e) {
+                return back()->with('error', 'Gagal upload ke Cloud Storage: ' . $e->getMessage());
+            }
+        }
+        // Simpan atau update jawaban di database
+        JawabanTugas::updateOrCreate(
+            [
+                'tugas_id' => $tugas_id,
+                'answered_by_id' => $request->user()->id,
+            ],
+            [
+                'jawaban' => $request->jawaban_text,
+                'file' => $path,
+                'file_url' => $fileUrl
+            ]
+        );
+
+        return back()->with('success', 'Tugas berhasil dikirim.');
     }
 
     public function kerjakan(Request $request, string $id)

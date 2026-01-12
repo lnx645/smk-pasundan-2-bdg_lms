@@ -48,12 +48,12 @@ return [
         ],
         'gcs' => [
             'driver' => 'gcs',
-            'key_file_path' => storage_path('app/avid-stone-462918-a9-01a79f29cb86.json'),
+            'key_file_path' => env("GCS_FILE_PATH", storage_path('app/avid-stone-462918-a9-01a79f29cb86.json')),
             'project_id' => env('GCS_PROJECT_ID'),
             'bucket' => env('GCS_BUCKET'),
             'path_prefix' => env('GCS_PATH_PREFIX', null),
             'storage_api_uri' => env('GCS_STORAGE_API_URI', null),
-            'visibility' => 'private',
+            'visibility' => 'public',
             'throw' => true,
         ],
         's3' => [
