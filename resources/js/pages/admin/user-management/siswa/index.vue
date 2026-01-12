@@ -8,6 +8,7 @@ import { toast } from 'vue-sonner';
 //@ts-ignore
 import Modal from '@/components/ui/modal.vue';
 import { debounce } from 'lodash';
+//@ts-ignore
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
 import ImportSiswaModal from './import-modal-siswa.vue';
