@@ -41,20 +41,20 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],
         'gcs' => [
             'driver' => 'gcs',
-            'key_file_path' => env('GCS_KEY_FILE', null), // path ke file JSON jika lokal
-            'key_file' => [], // Biarkan kosong jika di Cloud Run (menggunakan Service Account)
+            'key_file_path' => env('GCS_KEY_FILE', null),
             'project_id' => env('GCS_PROJECT_ID'),
             'bucket' => env('GCS_BUCKET'),
             'path_prefix' => env('GCS_PATH_PREFIX', null),
             'storage_api_uri' => env('GCS_STORAGE_API_URI', null),
-            'visibility' => 'public',
+            'visibility' => 'private', // UBAH JADI PRIVATE (Karena bucket Anda "Not Public")
+            'throw' => true,           // WAJIB TAMBAH INI (Agar error GCS muncul ke layar)
         ],
         's3' => [
             'driver' => 's3',
