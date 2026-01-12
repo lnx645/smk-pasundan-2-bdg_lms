@@ -73,6 +73,7 @@ class TugasSiswaController extends Controller
                 $path = $request->file('file')->store('jawaban-tugas', $disk);
                 $fileUrl = Storage::disk($disk)->url($path);
             } catch (Exception $e) {
+                dd($e);
                 return back()->with('error', 'Gagal upload ke Cloud Storage: ' . $e->getMessage());
             }
         }
