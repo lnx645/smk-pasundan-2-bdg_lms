@@ -7,15 +7,16 @@ use App\Models\Tugas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class TugasSiswaController extends Controller
 {
     /**
-     * Helper untuk mendeteksi disk mana yang digunakan (GCS atau Lokal)
+     * Mengambil disk default dari config (gcs atau public)
      */
     private function getActiveDisk()
     {
-        return config('filesystems.default') === 'gcs' ? 'gcs' : 'public';
+        return config('filesystems.default');
     }
 
     public function batalkanPengumpulan(Request $request, string $id)
@@ -33,14 +34,16 @@ class TugasSiswaController extends Controller
             return back()->with('error', 'Batas waktu pengumpulan telah berakhir.');
         }
 
-        // Hapus file secara dinamis berdasarkan disk yang aktif
-        $disk = $this->getActiveDisk();
-        if ($jawaban->file && Storage::disk($disk)->exists($jawaban->file)) {
-            Storage::disk($disk)->delete($jawaban->file);
+        // Hapus file dari storage (GCS atau Lokal)
+        if ($jawaban->file) {
+            $disk = $this->getActiveDisk();
+            if (Storage::disk($disk)->exists($jawaban->file)) {
+                Storage::disk($disk)->delete($jawaban->file);
+            }
         }
 
         $jawaban->delete();
-        return back()->with('success', 'Pengumpulan tugas berhasil dibatalkan. Silakan upload ulang.');
+        return back()->with('success', 'Pengumpulan tugas berhasil dibatalkan.');
     }
 
     public function kerjakanSimpan(Request $request, string $id)
@@ -48,13 +51,15 @@ class TugasSiswaController extends Controller
         $request->validate([
             'tugas_id' => 'nullable|exists:tugas,tugasID',
             'jawaban_text' => 'nullable|string',
-            'file' => 'nullable|file|max:10240',
+            'file' => 'nullable|file|max:10240', // Max 10MB
         ]);
+
         $tugas_id = $request->tugas_id ?? $id;
         $tugas = Tugas::where('tugasID', $tugas_id)->firstOrFail();
 
+        // Cek Deadline
         if (now()->greaterThan($tugas->deadline)) {
-            return back()->with('error', 'Maaf, batas waktu pengumpulan tugas sudah berakhir. Anda tidak dapat mengirim jawaban.');
+            return back()->with('error', 'Maaf, batas waktu pengumpulan tugas sudah berakhir.');
         }
 
         $path = null;
@@ -62,14 +67,15 @@ class TugasSiswaController extends Controller
         $disk = $this->getActiveDisk();
 
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('jawaban-tugas', $disk);
-            if ($disk === 'gcs') {
-                $fileUrl = Storage::disk('gcs')->url($path);
-            } else {
-                $fileUrl = asset('storage/' . $path);
+            try {
+                $path = $request->file('file')->store('jawaban-tugas', $disk);
+                $fileUrl = Storage::disk($disk)->url($path);
+            } catch (Exception $e) {
+                return back()->with('error', 'Gagal upload ke Cloud Storage: ' . $e->getMessage());
             }
         }
 
+        // Simpan atau update jawaban di database
         JawabanTugas::updateOrCreate(
             [
                 'tugas_id' => $tugas_id,
@@ -90,8 +96,9 @@ class TugasSiswaController extends Controller
         $user = $request->user();
         $siswa = $user->siswa;
         $tugas = Tugas::with(['user', 'matpel'])->findOrFail($id);
+
         $isAssigned = false;
-        $receivers = $tugas->receiver_type_id ?? [];
+        $receivers = is_array($tugas->receiver_type_id) ? $tugas->receiver_type_id : json_decode($tugas->receiver_type_id, true) ?? [];
 
         if ($tugas->receiver_type === 'class_id') {
             if ($siswa && in_array($siswa->kelas_id, $receivers)) {
@@ -104,7 +111,7 @@ class TugasSiswaController extends Controller
         }
 
         if (!$isAssigned) {
-            abort(403, 'Maaf, tugas ini tidak ditugaskan kepada Anda atau kelas Anda.');
+            abort(403, 'Maaf, tugas ini tidak ditugaskan kepada Anda.');
         }
 
         $submission = JawabanTugas::with(['nilai'])->where('tugas_id', $id)
@@ -120,33 +127,34 @@ class TugasSiswaController extends Controller
     public function showTugas(Request $request)
     {
         $userId  = $request->user()->id;
-        $kelasId = $request->kelas['id'];
+        $kelasId = $request->kelas['id'] ?? null;
 
-        $tugas = Tugas::query()->with('nilais')
-            ->with(['user', 'matpel'])
+        $tugas = Tugas::query()
+            ->with(['user', 'matpel', 'nilais'])
             ->where(function ($q) use ($userId) {
                 $q->where('receiver_type', 'siswa_id')
-                    ->whereJsonContains('receiver_type_id', $userId);
-            })
-            ->orWhere(function ($q) use ($kelasId) {
-                $q->where('receiver_type', 'class_id')
-                    ->whereJsonContains('receiver_type_id', $kelasId);
-            })
-            ->get();
+                    ->whereJsonContains('receiver_type_id', (int)$userId);
+            });
 
-        $jawaban = JawabanTugas::with('nilai')->where('answered_by_id', $userId)
+        if ($kelasId) {
+            $tugas->orWhere(function ($q) use ($kelasId) {
+                $q->where('receiver_type', 'class_id')
+                    ->whereJsonContains('receiver_type_id', (int)$kelasId);
+            });
+        }
+
+        $tugasList = $tugas->get();
+
+        $jawaban = JawabanTugas::where('answered_by_id', $userId)
             ->get()
             ->keyBy('tugas_id');
 
-        $tugas = $tugas->map(function ($item) use ($jawaban, $userId) {
+        $tugasList = $tugasList->map(function ($item) use ($jawaban, $userId) {
             $nilai = collect($item->nilais)
-                ->where('siswa_id', '=', $userId)
-                ->where('tugas_id', '=', $item->tugasID)
+                ->where('siswa_id', $userId)
                 ->first();
 
-            if ($nilai) {
-                $item->nilai_siswa = $nilai->angka;
-            }
+            $item->nilai_siswa = $nilai ? $nilai->angka : null;
             $item->is_dikerjakan = $jawaban->has($item->tugasID);
             $item->is_deadline_over = now()->greaterThan(SupportCarbon::parse($item->deadline));
 
@@ -154,7 +162,7 @@ class TugasSiswaController extends Controller
         });
 
         return inertia('siswa/tugas', [
-            'tugas' => $tugas->values(),
+            'tugas' => $tugasList->values(),
             'kelas' => $request->kelas,
         ]);
     }
