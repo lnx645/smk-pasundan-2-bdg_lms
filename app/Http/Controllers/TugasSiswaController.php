@@ -77,6 +77,7 @@ class TugasSiswaController extends Controller
                 return back()->with('error', 'Gagal upload ke Cloud Storage: ' . $e->getMessage());
             }
         }
+        dd($fileUrl);
         // Simpan atau update jawaban di database
         JawabanTugas::updateOrCreate(
             [
