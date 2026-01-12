@@ -16,7 +16,7 @@ class TugasSiswaController extends Controller
      */
     private function getActiveDisk()
     {
-        return env('GCS_BUCKET') ? 'gcs' : 'public';
+        return env('FILESYSTEM_DISK') ? 'gcs' : 'public';
     }
 
     public function batalkanPengumpulan(Request $request, string $id)
@@ -73,12 +73,10 @@ class TugasSiswaController extends Controller
                 $path = $request->file('file')->store('jawaban-tugas', $disk);
                 $fileUrl = Storage::disk($disk)->url($path);
             } catch (Exception $e) {
-                dd($e);
                 return back()->with('error', 'Gagal upload ke Cloud Storage: ' . $e->getMessage());
             }
         }
 
-        // Simpan atau update jawaban di database
         JawabanTugas::updateOrCreate(
             [
                 'tugas_id' => $tugas_id,

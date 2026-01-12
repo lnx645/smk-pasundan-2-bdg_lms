@@ -56,18 +56,16 @@ class TugasController extends Controller
                 });
             })
             ->get();
-
         $filtered = $tugas->filter(
             fn($item) =>
             $item->receiver_type !== 'class_id' ||
                 collect($item->receiver_type_id)->contains($kelas_id)
         );
-
         $jawabanTugas = JawabanTugas::whereIn('tugas_id', $filtered->pluck('tugasID'))
             ->get()
             ->groupBy('tugas_id');
 
-        $result = $filtered->map(function ($item) use ($jawabanTugas) {
+        $result = $filtered->map(function ($item) use ($jawabanTugas, $kelas_id) {
             $receiverUserList = [];
             $persentase = [];
             if ($item->receiver_type === "siswa_id") {
@@ -80,6 +78,35 @@ class TugasController extends Controller
                     'jumlah_submit' => $jumlahSubmit,
                     'total_siswa'   => $total,
                     'persen_submit' => $total > 0 ? round(($jumlahSubmit / $total) * 100, 2) : 0
+                ];
+
+                $users = User::whereIn('id', $targetUserIds)
+                    ->with(['siswa.kelas'])
+                    ->get();
+
+                $receiverUserList = $users->map(function ($u) use ($jawaban) {
+                    $isDikerjakan = $jawaban->where('answered_by_id', $u->id)->first();
+
+                    return [
+                        'dikerjakan' => $isDikerjakan !== null,
+                        'id'         => $u->id,
+                        'name'       => $u->name,
+                        'kelas'      => $u->siswa?->kelas?->nama ?? '-',
+                    ];
+                });
+            } else {
+                $targetKelasId = $item->receiver_type_id;
+                $targetUserIds = User::whereHas('siswa', function ($query) use ($targetKelasId) {
+                    $query->where('kelas_id', $targetKelasId);
+                })->pluck('id');
+                $jawaban = $jawabanTugas->get($item->tugasID, collect());
+                $jumlahSubmit = $jawaban->whereIn('answered_by_id', $targetUserIds)->count();
+                $totalSiswa = $targetUserIds->count();
+
+                $persentase = [
+                    'jumlah_submit' => $jumlahSubmit,
+                    'total_siswa'   => $totalSiswa,
+                    'persen_submit' => $totalSiswa > 0 ? round(($jumlahSubmit / $totalSiswa) * 100, 2) : 0
                 ];
 
                 $users = User::whereIn('id', $targetUserIds)

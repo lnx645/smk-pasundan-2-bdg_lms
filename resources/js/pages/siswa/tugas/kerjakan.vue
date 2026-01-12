@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { formatTanggal } from '@/lib/utils'; // Helper tanggal kamu
+import { formatTanggal } from '@/lib/utils';
 import { router, useForm, usePage } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
 import { computed, ref } from 'vue';
-import { toast } from 'vue-sonner'; // Asumsi pakai sonner/toast
+import { toast } from 'vue-sonner';
 
 // ICONS
 import { batalkanPengumpulan } from '@/actions/App/Http/Controllers/TugasSiswaController';
@@ -12,19 +13,52 @@ import MaterialSymbolsUpload from '@/icons/MaterialSymbolsUpload.vue';
 import MdiFileDocument from '@/icons/SolarDocumentAddBold.vue';
 import HugeiconsFileAttachment from '@/icons/StreamlinePlumpEmailAttachmentDocumentSolid.vue';
 import { kerjakanSimpan } from '@/routes/siswa/tugas/kerjakan';
-import dayjs from 'dayjs';
-// PROPS
-// Pastikan props dari controller memuat detail tugas & submission (jika ada)
+
 const page = usePage();
 const tugas = computed(() => page.props.tugas as any);
-const submission = computed(() => page.props.submission as any); // Data jawaban siswa (null jika belum)
+const submission = computed(() => page.props.submission as any);
 
-const isOverdue = computed(() => {
-    return dayjs().isAfter(dayjs(tugas.value.deadline));
-});
-
+// LOGIC STATUS
+const isOverdue = computed(() => dayjs().isAfter(dayjs(tugas.value.deadline)));
 const isSubmitted = computed(() => !!submission.value);
 const isGraded = computed(() => submission.value?.nilai !== null && submission.value?.nilai !== undefined);
+
+// --- LOGIC DINAMIS BERDASARKAN NILAI ---
+const gradingStyle = computed(() => {
+    const nilai = submission.value?.nilai?.angka || 0;
+    if (nilai >= 85)
+        return {
+            bg: 'bg-emerald-50 border-emerald-200',
+            circle: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+            text: 'text-emerald-700',
+            judul: 'Luar Biasa!',
+            feedback: 'Hasil yang sangat memuaskan, pertahankan prestasimu!',
+        };
+    if (nilai >= 75)
+        return {
+            bg: 'bg-blue-50 border-blue-200',
+            circle: 'bg-blue-100 text-blue-600 border-blue-200',
+            text: 'text-blue-700',
+            judul: 'Tugas Selesai Dinilai',
+            feedback: 'Kerja bagus! Sedikit lagi menuju sempurna.',
+        };
+    if (nilai >= 60)
+        return {
+            bg: 'bg-amber-50 border-amber-200',
+            circle: 'bg-amber-100 text-amber-600 border-amber-200',
+            text: 'text-amber-700',
+            judul: 'Cukup Baik',
+            feedback: 'Sudah cukup baik, pelajari lagi bagian yang kurang ya.',
+        };
+    return {
+        bg: 'bg-rose-50 border-rose-200',
+        circle: 'bg-rose-100 text-rose-600 border-rose-200',
+        text: 'text-rose-700',
+        judul: 'Perlu Perbaikan',
+        feedback: 'Jangan berkecil hati, silakan pelajari kembali materinya.',
+    };
+});
+
 // FORM
 const form = useForm({
     tugas_id: tugas.value.tugasID,
@@ -38,16 +72,12 @@ const dragging = ref(false);
 
 function handleFileSelect(event: Event) {
     const target = event.target as HTMLInputElement;
-    if (target.files && target.files.length > 0) {
-        form.file = target.files[0];
-    }
+    if (target.files?.length) form.file = target.files[0];
 }
 
 function handleDrop(event: DragEvent) {
     dragging.value = false;
-    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-        form.file = event.dataTransfer.files[0];
-    }
+    if (event.dataTransfer?.files?.length) form.file = event.dataTransfer.files[0];
 }
 
 function removeFile() {
@@ -55,183 +85,184 @@ function removeFile() {
     if (fileInput.value) fileInput.value.value = '';
 }
 
-// SUBMIT ACTION
 function submitTugas() {
     if (!form.file && !form.jawaban_text && tugas.value.mode_pengumpulan !== 'text') {
-        toast.error('Harap lampirkan file jawaban.');
+        toast.error('Harap lampirkan jawaban Anda.');
         return;
     }
 
-    form.submit(
-        kerjakanSimpan({
-            id: tugas.value.tugasID,
-        }),
-        {
-            onSuccess: () => {
-                toast.success('Tugas berhasil dikumpulkan!');
-            },
-            onError: () => toast.error('Gagal mengumpulkan tugas.'),
-        },
-    );
+    form.put(kerjakanSimpan({ id: tugas.value.tugasID }).url, {
+        onSuccess: () => toast.success('Tugas berhasil dikumpulkan!'),
+        onError: () => toast.error('Gagal mengumpulkan tugas.'),
+    });
 }
 
 function unsubmit() {
-    if (confirm('Batalkan pengumpulan? Anda harus mengupload ulang jawaban.')) {
-        router.delete(
-            batalkanPengumpulan({
-                id: submission.value.jawabanID,
-            }).url,
-        );
+    if (confirm('Batalkan pengumpulan? Anda harus mengunggah ulang jawaban.')) {
+        router.delete(batalkanPengumpulan({ id: submission.value.jawabanID }).url);
     }
 }
 </script>
 
 <template>
-    <div class="mx-auto mt-4 max-w-7xl pb-20">
+    <div class="mx-auto mt-4 max-w-7xl px-4 pb-20 sm:px-6">
         <div class="mb-6 border-b border-neutral-200 pb-6">
             <div class="flex flex-col justify-between gap-4 md:flex-row md:items-start">
                 <div>
                     <div class="mb-2 flex items-center gap-2 text-sm text-neutral-500">
-                        <span class="font-medium text-blue-600">{{ tugas.matpel?.nama || 'Matematika' }}</span>
+                        <span class="font-semibold tracking-wider text-blue-600 uppercase">{{ tugas.matpel?.nama }}</span>
                         <span>•</span>
-                        <span>{{ tugas.user.name || 'Pak Guru' }}</span>
+                        <span>{{ tugas.user.name }}</span>
                     </div>
-                    <h1 class="text-3xl font-bold tracking-tight text-neutral-800">{{ tugas.title }}</h1>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-neutral-900">{{ tugas.title }}</h1>
                 </div>
 
-                <div class="flex flex-col items-end gap-1">
+                <div class="flex flex-col items-end gap-2">
                     <div
                         v-if="isGraded"
-                        class="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-700"
+                        :class="['flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-bold', gradingStyle.bg, gradingStyle.text]"
                     >
-                        <MaterialSymbolsCheckCircle class="text-xl" />
+                        <MaterialSymbolsCheckCircle class="text-lg" />
                         Nilai: {{ submission.nilai.angka }} / 100
                     </div>
                     <div
                         v-else-if="isSubmitted"
-                        class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700"
+                        class="flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-bold text-blue-700"
                     >
-                        <MaterialSymbolsCheckCircle class="text-xl" />
+                        <MaterialSymbolsCheckCircle class="text-lg" />
                         Sudah Dikumpulkan
                     </div>
-                    <div v-else-if="isOverdue" class="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-600">
+                    <div v-else-if="isOverdue" class="rounded-full border border-red-200 bg-red-50 px-4 py-1.5 text-sm font-bold text-red-600">
                         Terlewat Deadline
                     </div>
-                    <div v-else class="rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-600">
-                        Ditugaskan
-                    </div>
 
-                    <p class="mt-1 text-xs text-neutral-400">Tenggat: {{ formatTanggal(tugas.deadline) }}</p>
+                    <p class="text-xs font-medium text-neutral-400">Tenggat: {{ formatTanggal(tugas.deadline) }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-            <div class="space-y-6 lg:col-span-8">
-                <div class="min-h-[300px] rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-                    <h3 class="mb-4 border-b border-neutral-100 pb-2 text-sm font-bold tracking-wider text-neutral-500 uppercase">Instruksi</h3>
-                    <div class="prose max-w-none text-sm leading-relaxed text-neutral-700" v-html="tugas.content"></div>
+        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+            <div class="space-y-5 lg:col-span-8">
+                <div class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:shadow-md">
+                    <div class="mb-4 flex items-center justify-between border-b border-neutral-50 pb-3">
+                        <h3 class="flex items-center gap-2 text-[11px] font-bold tracking-widest text-neutral-400 uppercase">
+                            <MdiFileDocument class="text-lg text-blue-500" /> Instruksi Tugas
+                        </h3>
+                        <span class="text-[10px] font-medium text-neutral-400 italic">Terakhir diupdate: {{ formatTanggal(tugas.updated_at) }}</span>
+                    </div>
+
+                    <div class="prose prose-sm max-w-none leading-relaxed text-neutral-600 prose-blue" v-html="tugas.content"></div>
                 </div>
 
-                <div v-if="tugas.attachments && tugas.attachments.length > 0">
-                    <h3 class="mb-3 text-sm font-bold text-neutral-700">Lampiran Pendukung</h3>
+                <div v-if="tugas.attachments?.length">
+                    <h3 class="mb-3 px-1 text-xs font-bold tracking-tight text-neutral-500 uppercase">Materi Pendukung</h3>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <a
                             v-for="file in tugas.attachments"
                             :key="file.id"
                             :href="file.url"
                             target="_blank"
-                            class="group flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 transition-all hover:border-blue-400 hover:bg-blue-50"
+                            class="group flex items-center gap-3 rounded-xl border border-neutral-100 bg-white p-3 transition-all hover:border-blue-400 hover:bg-blue-50/50"
                         >
-                            <div class="flex h-10 w-10 items-center justify-center rounded bg-neutral-100 text-neutral-500 group-hover:text-blue-600">
-                                <HugeiconsFileAttachment />
+                            <div
+                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 shadow-sm transition-all group-hover:bg-blue-600 group-hover:text-white"
+                            >
+                                <HugeiconsFileAttachment class="text-lg" />
                             </div>
                             <div class="overflow-hidden">
-                                <p class="truncate text-sm font-medium text-neutral-800 group-hover:text-blue-700">{{ file.name }}</p>
-                                <p class="text-xs text-neutral-400">Klik untuk unduh</p>
+                                <p class="truncate text-xs font-bold text-neutral-800">{{ file.name }}</p>
+                                <p class="text-[10px] font-medium text-neutral-400">Unduh Lampiran</p>
                             </div>
                         </a>
                     </div>
                 </div>
             </div>
 
-            <div class="sticky top-6 lg:col-span-4">
-                <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg">
-                    <div class="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-5 py-4">
-                        <h3 class="font-bold text-neutral-700">Lembar Jawab</h3>
-                        <span class="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 uppercase">
-                            {{ tugas.mode_pengumpulan === 'text' ? 'Teks' : 'File Upload' }}
-                        </span>
+            <div class="sticky top-6 space-y-4 lg:col-span-4">
+                <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl shadow-neutral-200/40">
+                    <div class="flex items-center justify-between bg-primary px-5 py-3 text-white">
+                        <h3 class="text-sm font-bold tracking-wide">Lembar Jawab</h3>
+                        <div class="rounded bg-blue-500/20 px-2 py-0.5 text-[9px] font-black text-blue-300 uppercase ring-1 ring-blue-500/30">
+                            {{ tugas.mode_pengumpulan }}
+                        </div>
                     </div>
 
-                    <div v-if="isGraded" class="p-6 text-center">
-                        <div
-                            class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-600"
-                        >
-                            {{ submission.nilai.angka }}
+                    <div v-if="isGraded" :class="['p-6 text-center transition-all', gradingStyle.bg]">
+                        <div class="mb-4 flex items-center justify-center gap-4">
+                            <div
+                                :class="[
+                                    'flex h-14 w-14 rotate-3 items-center justify-center rounded-2xl border-2 text-2xl font-black shadow-sm',
+                                    gradingStyle.circle,
+                                ]"
+                            >
+                                {{ submission.nilai.angka }}
+                            </div>
+                            <div class="text-left">
+                                <h4 :class="['text-sm font-extrabold tracking-tight uppercase', gradingStyle.text]">{{ gradingStyle.judul }}</h4>
+                                <p class="text-[11px] leading-tight text-neutral-500 italic">"{{ submission.feedback || gradingStyle.feedback }}"</p>
+                            </div>
                         </div>
-                        <h4 class="font-bold text-neutral-800">Tugas Selesai Dinilai</h4>
-                        <p class="mt-1 text-sm text-neutral-500">"{{ submission.feedback || 'Kerja bagus, pertahankan!' }}"</p>
-                        <div class="mt-6 border-t border-neutral-100 pt-4">
-                            <p class="mb-2 text-xs text-neutral-400">Jawaban Anda:</p>
+
+                        <div class="mt-4 rounded-xl bg-white/60 p-3 ring-1 ring-black/5 backdrop-blur-sm">
+                            <p class="mb-2 text-[9px] font-bold tracking-widest text-neutral-400 uppercase">File Jawaban Anda</p>
                             <a
                                 v-if="submission.file_url"
                                 :href="submission.file_url"
                                 target="_blank"
-                                class="flex items-center justify-center gap-1 text-sm text-blue-600 hover:underline"
+                                class="flex items-center justify-center gap-2 rounded-lg border border-blue-100 bg-white py-2 text-xs font-bold text-blue-600 shadow-sm transition-all hover:bg-blue-600 hover:text-white"
                             >
-                                <MdiFileDocument /> Lihat File Anda
+                                <MdiFileDocument class="text-base" /> Lihat Dokumen
                             </a>
-                            <p v-else class="rounded border border-neutral-100 bg-neutral-50 p-3 text-sm text-neutral-700 italic">
-                                {{ submission.jawaban_text }}
-                            </p>
+                            <div v-else class="px-2 text-xs text-neutral-700 italic">{{ submission.jawaban_text }}</div>
                         </div>
                     </div>
 
                     <div v-else-if="isSubmitted" class="p-6 text-center">
-                        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                        <div
+                            class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 ring-4 ring-emerald-50/50"
+                        >
                             <MaterialSymbolsCheckCircle class="text-2xl" />
                         </div>
-                        <h4 class="font-bold text-neutral-800">Berhasil Dikirim</h4>
-                        <p class="mt-1 mb-4 text-xs text-neutral-500">Dikirim pada {{ formatTanggal(submission.created_at) }}</p>
+                        <h4 class="text-sm font-bold text-neutral-800">Tugas Terkirim</h4>
+                        <p class="mt-1 text-[10px] text-neutral-400 italic">Diterima: {{ dayjs(submission.created_at).format('DD MMM, HH:mm') }}</p>
 
-                        <div v-if="!isOverdue" class="space-y-3">
-                            <p class="text-xs text-neutral-400">Ingin mengubah jawaban?</p>
+                        <div v-if="!isOverdue" class="mt-5">
                             <button
                                 @click="unsubmit"
-                                class="w-full rounded-lg border border-red-200 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                                class="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-2.5 text-[11px] font-bold text-neutral-500 transition-all hover:border-red-100 hover:bg-red-50 hover:text-red-600 active:scale-95"
                             >
-                                Batalkan Pengumpulan
+                                Batalkan Pengiriman
                             </button>
                         </div>
-                        <div v-else class="rounded bg-amber-50 p-2 text-xs text-amber-600">Masa pengumpulan telah berakhir. Tidak dapat diubah.</div>
                     </div>
 
                     <div v-else class="space-y-4 p-5">
-                        <div v-if="isOverdue" class="mb-2 rounded border border-red-100 bg-red-50 p-3 text-xs text-red-600">
-                            <span class="font-bold">Terlambat!</span> Anda mengumpulkan melewati tenggat waktu.
+                        <div v-if="isOverdue" class="flex items-center gap-3 rounded-xl bg-rose-50 p-3 ring-1 ring-rose-100">
+                            <span class="text-lg">⚠️</span>
+                            <p class="text-[10px] leading-tight font-semibold text-rose-700">
+                                Deadline telah lewat. Pengumpulan Anda akan ditandai terlambat.
+                            </p>
                         </div>
 
-                        <div v-if="!isOverdue && ['text', 'mixed'].includes(tugas.mode_pengumpulan)">
-                            <label class="mb-1 block text-xs font-semibold text-neutral-500">Jawaban Teks</label>
+                        <div v-if="['text', 'mixed'].includes(tugas.mode_pengumpulan)">
                             <textarea
                                 v-model="form.jawaban_text"
-                                rows="6"
-                                class="w-full rounded-lg border-neutral-300 text-sm focus:border-blue-500 focus:ring-blue-500"
-                                placeholder="Ketik jawaban Anda di sini..."
+                                rows="4"
+                                class="w-full rounded-xl border-neutral-100 bg-neutral-50 text-xs placeholder:text-neutral-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                                placeholder="Tuliskan jawaban singkat..."
                             ></textarea>
                         </div>
 
-                        <div v-if="!isOverdue && ['file', 'foto', 'mixed'].includes(tugas.mode_pengumpulan)">
-                            <label class="mb-1 block text-xs font-semibold text-neutral-500">Upload File</label>
-
+                        <div v-if="['file', 'foto', 'mixed'].includes(tugas.mode_pengumpulan)">
                             <div
                                 @dragover.prevent="dragging = true"
                                 @dragleave.prevent="dragging = false"
                                 @drop.prevent="handleDrop"
                                 @click="fileInput?.click()"
-                                class="group cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all duration-200"
-                                :class="dragging ? 'border-blue-500 bg-blue-50' : 'border-neutral-300 hover:border-blue-400 hover:bg-neutral-50'"
+                                :class="[
+                                    'group cursor-pointer rounded-xl border-2 border-dashed px-4 py-6 text-center transition-all',
+                                    dragging ? 'border-blue-500 bg-blue-50' : 'border-neutral-100 hover:border-blue-300 hover:bg-neutral-50',
+                                ]"
                             >
                                 <input
                                     type="file"
@@ -240,49 +271,65 @@ function unsubmit() {
                                     @change="handleFileSelect"
                                     :accept="tugas.mode_pengumpulan === 'foto' ? 'image/*' : '*'"
                                 />
-                                <div v-if="!form.file">
-                                    <div
-                                        class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-neutral-400 transition-colors group-hover:bg-blue-100 group-hover:text-blue-500"
-                                    >
-                                        <MaterialSymbolsUpload class="text-xl" />
-                                    </div>
-                                    <p class="text-sm font-medium text-neutral-700">Klik atau Drag File</p>
-                                    <p class="mt-1 text-xs text-neutral-400">PDF, Word, JPG (Max 10MB)</p>
+
+                                <div v-if="!form.file" class="space-y-1">
+                                    <MaterialSymbolsUpload class="mx-auto text-xl text-neutral-300 transition-colors group-hover:text-blue-500" />
+                                    <p class="text-[11px] font-bold text-neutral-500">Pilih File Jawaban</p>
                                 </div>
 
-                                <div v-else class="flex items-center justify-between rounded border border-blue-100 bg-white p-2 shadow-sm">
-                                    <div class="flex items-center gap-2 overflow-hidden">
-                                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-blue-100 text-blue-600">
-                                            <MdiFileDocument />
+                                <div v-else class="flex items-center justify-between rounded-lg bg-white p-2 shadow-sm ring-1 ring-black/5">
+                                    <div class="flex items-center gap-2 overflow-hidden px-1">
+                                        <MdiFileDocument class="shrink-0 text-lg text-blue-500" />
+                                        <div class="truncate text-left">
+                                            <p class="truncate text-[10px] font-bold text-neutral-800">{{ form.file.name }}</p>
+                                            <p class="font-mono text-[9px] text-neutral-400">{{ (form.file.size / 1024 / 1024).toFixed(1) }}MB</p>
                                         </div>
-                                        <p class="max-w-[150px] truncate text-xs font-medium text-neutral-700">{{ form.file.name }}</p>
                                     </div>
-                                    <button @click.stop="removeFile" class="p-1 text-red-400 hover:text-red-600">
-                                        <IcBaselineDelete />
+                                    <button @click.stop="removeFile" class="p-1.5 text-neutral-400 transition-colors hover:text-red-500">
+                                        <IcBaselineDelete class="text-base" />
                                     </button>
                                 </div>
                             </div>
                         </div>
 
                         <button
-                            v-if="!isOverdue"
                             @click="submitTugas"
                             :disabled="form.processing"
-                            class="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                            class="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow-lg shadow-blue-600/30 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
                         >
-                            <span v-if="form.processing">Mengirim...</span>
-                            <span v-else>Serahkan Tugas</span>
+                            <span v-if="form.processing" class="flex items-center gap-2">
+                                <svg class="h-3 w-3 animate-spin text-white" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                Memproses...
+                            </span>
+                            <template v-else>
+                                <span>Serahkan Jawaban</span>
+                                <MaterialSymbolsUpload class="transition-transform group-hover:-translate-y-0.5" />
+                            </template>
                         </button>
                     </div>
                 </div>
 
-                <div class="mt-4 flex items-start gap-3 rounded-lg border border-yellow-100 bg-yellow-50 p-3">
-                    <span class="text-lg text-yellow-600">💡</span>
-                    <p class="text-xs leading-snug text-yellow-800">
-                        Pastikan file yang diunggah sudah benar. Anda tidak bisa mengubah jawaban setelah tenggat waktu berakhir.
+                <div class="flex items-center gap-3 rounded-xl border border-blue-50 bg-blue-50/30 p-3">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px]">💡</span>
+                    <p class="text-[10px] leading-tight font-medium text-blue-800/70">
+                        Double-check jawabanmu. Setelah diserahkan, perubahan hanya bisa dilakukan sebelum deadline.
                     </p>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
+<style scoped>
+/* Tambahan transisi halus */
+.transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>

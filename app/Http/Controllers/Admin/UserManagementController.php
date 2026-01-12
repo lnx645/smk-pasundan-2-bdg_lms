@@ -286,7 +286,7 @@ class UserManagementController extends Controller
 
                     $user = User::create([
                         'name'     => $line['nama_lengkap'],
-                        'email'    => $nip . '@guru.sekolah.id',
+                        'email'    => EmailGenerator::generateEmailDomain($nip),
                         'password' => Hash::make($password),
                     ]);
 
@@ -346,7 +346,7 @@ class UserManagementController extends Controller
         }
 
         $users = $query->with(['siswa.kelas'])
-            ->latest()
+            ->orderBy('users.name', 'asc') // Urutkan berdasarkan kolom name di tabel users
             ->paginate(5)
             ->withQueryString();
 

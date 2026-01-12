@@ -5,11 +5,10 @@
     >
         <div class="container mx-auto flex h-24 items-center justify-between px-4 lg:px-0">
             <Logo />
-
             <div ref="profileRef" class="relative z-50">
                 <button
                     @click="toggleProfile"
-                    class="flex items-center justify-center rounded-full transition-transform focus:ring-2 focus:ring-white/20 focus:outline-none active:scale-95"
+                    class="flex items-center justify-center rounded-full bg-white transition-transform focus:ring-2 focus:ring-white/20 focus:outline-none active:scale-95"
                 >
                     <Avatar
                         :avatar_uri="($page.props.auth.user.siswa as any)?.pas_photo"
@@ -61,7 +60,7 @@
                         <div class="py-2">
                             <Link
                                 href="/logout"
-                                method="post"
+                                method="get"
                                 as="button"
                                 class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                             >
