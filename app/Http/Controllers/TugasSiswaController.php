@@ -67,8 +67,9 @@ class TugasSiswaController extends Controller
         $path = null;
         $fileUrl = null;
         $disk = $this->getActiveDisk();
-
+        dd($request->hasFile('file'));
         if ($request->hasFile('file')) {
+            dd($request->all());
             try {
                 $path = $request->file('file')->store('jawaban-tugas', $disk);
                 $fileUrl = Storage::disk($disk)->url($path);
