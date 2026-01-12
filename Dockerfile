@@ -38,6 +38,7 @@ RUN php artisan config:cache
 
 # 11. Atur Permission
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN sed -i 's/client_max_body_size .*/client_max_body_size 30M;/' /etc/nginx/nginx.conf || echo "client_max_body_size 30M;" >> /etc/nginx/conf.d/default.conf
 # Tambahkan ini sebelum perintah CMD atau ENTRYPOINT
 RUN echo "upload_max_filesize=25M" > /usr/local/etc/php/conf.d/uploads.ini \
     && echo "post_max_size=30M" >> /usr/local/etc/php/conf.d/uploads.ini \
