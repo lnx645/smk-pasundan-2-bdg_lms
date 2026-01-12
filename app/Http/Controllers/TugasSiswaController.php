@@ -16,7 +16,7 @@ class TugasSiswaController extends Controller
      */
     private function getActiveDisk()
     {
-        return config('filesystems.default');
+        return env('GOOGLE_CLOUD_STORAGE_BUCKET') ? 'gcs' : 'public';
     }
 
     public function batalkanPengumpulan(Request $request, string $id)
