@@ -48,13 +48,13 @@ return [
         ],
         'gcs' => [
             'driver' => 'gcs',
-            'key_file_path' => env('GCS_KEY_FILE', null),
+            'key_file_path' => storage_path('app/avid-stone-462918-a9-01a79f29cb86.json'),
             'project_id' => env('GCS_PROJECT_ID'),
             'bucket' => env('GCS_BUCKET'),
             'path_prefix' => env('GCS_PATH_PREFIX', null),
             'storage_api_uri' => env('GCS_STORAGE_API_URI', null),
-            'visibility' => 'private', // UBAH JADI PRIVATE (Karena bucket Anda "Not Public")
-            'throw' => true,           // WAJIB TAMBAH INI (Agar error GCS muncul ke layar)
+            'visibility' => 'private',
+            'throw' => true,
         ],
         's3' => [
             'driver' => 's3',
