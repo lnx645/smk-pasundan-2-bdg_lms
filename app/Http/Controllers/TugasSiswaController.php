@@ -69,6 +69,7 @@ class TugasSiswaController extends Controller
         $disk = $this->getActiveDisk();
 
         if ($request->hasFile('file')) {
+            dd($disk);
             try {
                 $path = $request->file('file')->store('jawaban-tugas', $disk);
                 $fileUrl = Storage::disk($disk)->url($path);
@@ -77,7 +78,6 @@ class TugasSiswaController extends Controller
                 return back()->with('error', 'Gagal upload ke Cloud Storage: ' . $e->getMessage());
             }
         }
-        dd($disk);
 
         // Simpan atau update jawaban di database
         JawabanTugas::updateOrCreate(
