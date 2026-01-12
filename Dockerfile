@@ -38,7 +38,10 @@ RUN php artisan config:cache
 
 # 11. Atur Permission
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-
+# Tambahkan ini sebelum perintah CMD atau ENTRYPOINT
+RUN echo "upload_max_filesize=25M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size=30M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "memory_limit=256M" >> /usr/local/etc/php/conf.d/uploads.ini
 # 12. Expose port 8080
 EXPOSE 8080
 
