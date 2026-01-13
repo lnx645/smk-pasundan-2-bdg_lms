@@ -1,14 +1,176 @@
+<template>
+    <div class="mx-auto min-h-screen max-w-4xl bg-[#fbfbfb] px-4 py-8">
+        <div class="mb-6">
+            <h1 class="text-xl font-bold text-slate-800">Forum {{ current_matpel_name }}</h1>
+            <p class="text-sm text-slate-500">Ruang diskusi, tanya jawab, dan berbagi materi kelas</p>
+        </div>
+
+        <div class="mb-8 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div class="flex gap-4">
+                <div class="hidden shrink-0 sm:block">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+                        {{ user.name.substring(0, 2).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <textarea
+                        v-model="form.description"
+                        placeholder="Bagikan sesuatu atau ajukan pertanyaan..."
+                        class="min-h-[80px] w-full resize-none rounded-lg border-none bg-slate-50 p-3 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0"
+                    ></textarea>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between">
+                <span
+                    class="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide uppercase"
+                    :class="isGuru ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'"
+                >
+                    {{ isGuru ? 'Guru' : 'Siswa' }}
+                </span>
+                <button
+                    @click="submit('forum')"
+                    :disabled="form.processing || form.description.length < 3"
+                    class="rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white transition-all hover:bg-indigo-700 disabled:opacity-50"
+                >
+                    <span v-if="form.processing">...</span>
+                    <span v-else class="flex items-center gap-2">Kirim <Send :size="14" /></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div v-for="item in discussions" :key="item.id" class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div class="mb-4 flex items-start justify-between">
+                    <div class="flex gap-3">
+                        <div class="shrink-0">
+                            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-indigo-900">
+                                {{ item.user?.name.substring(0, 2).toUpperCase() }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-[13px] leading-snug">
+                                <span class="font-bold text-indigo-950">{{ item.user?.name }}</span>
+                                <span class="mx-1 text-slate-500">memposting {{ item.object_type === 'materi' ? 'materi' : 'diskusi' }}</span>
+                            </div>
+                            <div class="mt-1 text-xs text-slate-400">
+                                {{ item.created_at_human }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        v-if="$page.props.auth.user.id == item.user_id || ($page.props.auth.user?.role as any) == 'guru'"
+                        @click="onDelete(item.id)"
+                        class="text-slate-300 transition-colors hover:text-red-500"
+                    >
+                        <Trash2 :size="16" />
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <p class="mb-4 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-600">
+                        {{ isLongText(item.description) && !expandedPosts.includes(item.id) ? getTruncatedText(item.description) : item.description }}
+                    </p>
+                    <button
+                        v-if="isLongText(item.description)"
+                        @click="toggleExpand(item.id)"
+                        class="mt-2 mb-4 text-sm font-bold text-amber-500 transition-colors hover:text-amber-600"
+                    >
+                        {{ expandedPosts.includes(item.id) ? 'Sembunyikan' : 'Baca Selengkapnya' }}
+                    </button>
+
+                    <div v-if="item.object_type === 'materi' && item.linked_object" class="mt-4">
+                        <div
+                            class="flex items-center justify-between rounded-lg border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                        >
+                            <div class="flex items-center gap-4 overflow-hidden">
+                                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="lucide lucide-notebook-text"
+                                    >
+                                        <path d="M2 6h4" />
+                                        <path d="M2 10h4" />
+                                        <path d="M2 14h4" />
+                                        <path d="M2 18h4" />
+                                        <rect width="16" height="20" x="4" y="2" rx="2" />
+                                        <path d="M9.5 8h5" />
+                                        <path d="M9.5 12h5" />
+                                        <path d="M9.5 16h5" />
+                                    </svg>
+                                </div>
+
+                                <div class="min-w-0">
+                                    <h4 class="truncate text-base font-bold text-slate-900">
+                                        {{ item.linked_object.judul || item.linked_object.nama || 'Materi Baru' }}
+                                    </h4>
+                                    <p class="truncate text-sm font-medium text-indigo-900/80">Klik tombol detail untuk membuka materi</p>
+                                </div>
+                            </div>
+
+                            <div class="shrink-0 pl-4">
+                                <Link
+                                    :href="view({ id: item.linked_object.id }).url"
+                                    class="inline-flex items-center justify-center rounded-lg bg-orange-400 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-500"
+                                >
+                                    Lihat Detail
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-6 border-t border-slate-100 pt-4">
+                    <button
+                        @click="likePost(item.id)"
+                        class="flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
+                    >
+                        <Heart :size="20" class="stroke-indigo-500" :class="{ 'fill-indigo-500 text-indigo-500': item.is_liked_by_user }" />
+                        <span class="font-semibold text-indigo-500">{{ item.likes || 0 }} Suka</span>
+                    </button>
+
+                    <Link
+                        :href="
+                            DiscusionController.comments({
+                                matpels_id: item.matpel_kode,
+                                kelas_id: item.kelas_id,
+                                discusion: item.id,
+                            })
+                        "
+                        class="flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
+                    >
+                        <MessageCircle :size="20" class="stroke-indigo-500" />
+                        <span class="font-semibold text-indigo-500">{{ item.comments?.length || 0 }} Komentar</span>
+                    </Link>
+                </div>
+            </div>
+
+            <div v-if="discussions.length === 0" class="py-12 text-center">
+                <p class="text-slate-400">Belum ada diskusi yang dimulai.</p>
+            </div>
+        </div>
+    </div>
+</template>
+
 <script setup lang="ts">
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { computed, ref } from 'vue';
 
 // Icons
-import { ArrowRight, FileText, Heart, MessageSquare, Send, Trash2 } from 'lucide-vue-next';
+import { Heart, MessageCircle, Send, Trash2 } from 'lucide-vue-next';
 
 // Components & Utils
 import DiscusionController from '@/actions/App/Http/Controllers/DiscusionController';
-import PageTitle from '@/layouts/page-title.vue';
 import { view } from '@/routes/siswa/materi';
 
 // Props Definition
@@ -56,7 +218,7 @@ const likePost = (id: number) => {
 
 const onDelete = (id: string) => {
     Swal.fire({
-        title: 'Hapus Diskusi?',
+        title: 'Hapus Postingan?',
         text: 'Tindakan ini tidak bisa dibatalkan!',
         icon: 'warning',
         showCancelButton: true,
@@ -99,188 +261,8 @@ const getTruncatedText = (text: string) => {
 };
 </script>
 
-<template>
-    <div class="mx-auto px-4 py-8">
-        <div class="mb-8">
-            <PageTitle :title="`Forum ${current_matpel_name}`" subtitle="Ruang diskusi, tanya jawab, dan berbagi materi kelas" />
-        </div>
-
-        <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
-            <div class="space-y-6 lg:col-span-12">
-                <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60 transition-shadow hover:shadow-md">
-                    <div class="p-4 sm:p-6">
-                        <div class="flex gap-4">
-                            <div class="hidden sm:block">
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white shadow-md"
-                                >
-                                    {{ user.name.substring(0, 2).toUpperCase() }}
-                                </div>
-                            </div>
-                            <div class="flex-grow">
-                                <textarea
-                                    v-model="form.description"
-                                    placeholder="Bagikan sesuatu atau ajukan pertanyaan..."
-                                    class="min-h-[100px] w-full resize-none rounded-xl border-none bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20"
-                                ></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-4 py-3 sm:px-6">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
-                                :class="
-                                    isGuru ? 'bg-indigo-50 text-indigo-700 ring-indigo-600/20' : 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
-                                "
-                            >
-                                {{ isGuru ? 'Guru' : 'Siswa' }}
-                            </span>
-                        </div>
-                        <button
-                            @click="submit('forum')"
-                            :disabled="form.processing || form.description.length < 3"
-                            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-                        >
-                            <span v-if="form.processing">Mengirim...</span>
-                            <span v-else class="flex items-center gap-2"> Kirim <Send :size="14" /> </span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div
-                        v-for="item in discussions"
-                        :key="item.id"
-                        class="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/60 transition-all hover:shadow-md hover:ring-slate-300"
-                    >
-                        <div class="mb-4 flex items-start justify-between">
-                            <div class="flex gap-3">
-                                <div
-                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-bold text-slate-700 shadow-sm ring-2 ring-white"
-                                >
-                                    {{ item.user?.name.substring(0, 2).toUpperCase() }}
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <h4 class="text-sm font-bold text-slate-900">{{ item.user?.name }}</h4>
-                                        <span
-                                            v-if="item.user?.role === 'guru'"
-                                            class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700 ring-1 ring-indigo-700/10 ring-inset"
-                                            >GURU</span
-                                        >
-                                    </div>
-                                    <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
-                                        <span>{{ item.created_at_human }}</span>
-                                        <span>•</span>
-                                        <span class="rounded bg-indigo-50 px-1.5 font-medium text-indigo-600">{{ current_matpel_name }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                v-if="$page.props.auth.user.id == item.user_id || ($page.props.auth.user?.role as any) == 'guru'"
-                                @click="onDelete(item.id)"
-                                class="rounded-full p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                                title="Hapus"
-                            >
-                                <Trash2 :size="16" />
-                            </button>
-                        </div>
-
-                        <div class="mb-4 pl-14">
-                            <div class="text-[14px] leading-7 font-normal whitespace-pre-wrap text-slate-700">
-                                {{
-                                    isLongText(item.description) && !expandedPosts.includes(item.id)
-                                        ? getTruncatedText(item.description)
-                                        : item.description
-                                }}
-                            </div>
-
-                            <button
-                                v-if="isLongText(item.description)"
-                                @click="toggleExpand(item.id)"
-                                class="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
-                            >
-                                {{ expandedPosts.includes(item.id) ? 'Sembunyikan' : 'Baca Selengkapnya' }}
-                            </button>
-
-                            <div v-if="item.object_type === 'materi' && item.linked_object" class="mt-4">
-                                <Link
-                                    :href="view({ id: item.linked_object.id }).url"
-                                    class="group/card flex items-center gap-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm"
-                                >
-                                    <div
-                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100 transition-transform group-hover/card:scale-105"
-                                    >
-                                        <FileText :size="24" stroke-width="1.5" />
-                                    </div>
-                                    <div class="flex-grow overflow-hidden">
-                                        <h4 class="truncate text-sm font-bold text-slate-800 transition-colors group-hover/card:text-indigo-700">
-                                            {{ item.linked_object.judul || item.linked_object.nama || 'Materi Pembelajaran' }}
-                                        </h4>
-                                        <div class="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
-                                            <span class="text-[10px] font-semibold tracking-wider text-indigo-500 uppercase">Materi</span>
-                                            <span class="h-1 w-1 rounded-full bg-slate-300"></span>
-                                            <span>Klik untuk membuka</span>
-                                        </div>
-                                    </div>
-                                    <div class="pr-2 text-indigo-300 transition-all group-hover/card:translate-x-1 group-hover/card:text-indigo-600">
-                                        <ArrowRight :size="20" />
-                                    </div>
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-6 border-t border-slate-100 pt-4 pl-14">
-                            <button
-                                @click="likePost(item.id)"
-                                class="group/btn flex items-center gap-2 text-xs font-medium text-slate-500 transition hover:text-pink-600"
-                            >
-                                <div class="rounded-full p-1.5 transition-colors group-hover/btn:bg-pink-50">
-                                    <Heart
-                                        :size="18"
-                                        :class="{ 'fill-pink-500 text-pink-500': item.is_liked_by_user }"
-                                        class="transition-transform group-active/btn:scale-125"
-                                    />
-                                </div>
-                                <span>{{ item.likes || 0 }} Suka</span>
-                            </button>
-
-                            <Link
-                                :href="
-                                    DiscusionController.comments({
-                                        matpels_id: item.matpel_kode,
-                                        kelas_id: item.kelas_id,
-                                        discusion: item.id,
-                                    })
-                                "
-                                class="group/btn flex items-center gap-2 text-xs font-medium text-slate-500 transition hover:text-indigo-600"
-                            >
-                                <div class="rounded-full p-1.5 transition-colors group-hover/btn:bg-indigo-50">
-                                    <MessageSquare :size="18" />
-                                </div>
-                                <span>{{ item.comments?.length || 0 }} Komentar</span>
-                            </Link>
-                        </div>
-                    </div>
-
-                    <div
-                        v-if="discussions.length === 0"
-                        class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center"
-                    >
-                        <div class="mb-4 rounded-full bg-slate-50 p-4 ring-1 ring-slate-100">
-                            <MessageSquare :size="40" class="text-slate-300" />
-                        </div>
-                        <h3 class="text-base font-bold text-slate-900">Belum ada diskusi</h3>
-                        <p class="mt-1 max-w-sm text-sm leading-relaxed text-slate-500">
-                            Jadilah yang pertama memulai percakapan atau bertanya mengenai materi
-                            <span class="font-medium text-indigo-600">{{ current_matpel_name }}</span
-                            >.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
+<style>
+body {
+    background-color: #fbfbfb;
+}
+</style>

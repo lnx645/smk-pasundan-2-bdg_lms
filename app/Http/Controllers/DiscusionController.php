@@ -89,6 +89,7 @@ class DiscusionController extends Controller
         }
         $discussions = Discusion::with(['user', 'matpel', 'comments', 'linkedObject'])
             ->where('kelas_id', $kelas_id)
+            ->where('matpel_kode', $matpels_id)
             ->latest()
             ->get()->map(function ($item) {
                 $item->created_at_human = $item->created_at->diffForHumans();
