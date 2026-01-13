@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Discusion;
+use App\Models\DiscusionComment;
 use App\Models\Matpel;
 use App\Service\Contract\KelasServiceInterface;
 use App\Service\Contract\MatpelServiceInterface;
@@ -12,6 +13,40 @@ use Illuminate\Support\Facades\Auth;
 
 class DiscusionController extends Controller
 {
+    public function comments(string $kelas_id, string $matpel_kode, string $id)
+    {
+        $disc = Discusion::with([
+            'user',
+            'comments' => function ($query) {
+                $query->latest();
+            },
+            'comments.user'
+        ])->where([
+            'kelas_id'    => $kelas_id,
+            'matpel_kode' => $matpel_kode,
+            'id'          => $id,
+        ])
+            ->firstOrFail();
+        return inertia('discusion/comment', [
+            'discusion' => $disc,
+            'comments' => $disc->comments, // Kirim comments yang sudah ada user-nya
+        ]);
+    }
+    public function postComment(Request $request)
+    {
+        $validated = $request->validate([
+            'discusion_id' => 'required|exists:discusions,id',
+            'text' => 'required|string',
+        ]);
+
+        DiscusionComment::create([
+            'discusion_id' => $validated['discusion_id'],
+            'user_id' => Auth::user()->id, // Ambil ID dari user yang login
+            'text' => $validated['text'],
+        ]);
+
+        return back(); // Kembali ke halaman diskusi
+    }
     public function indexDiskusiGuru(
         Request $request,
         KelasServiceInterface $kelasService
@@ -52,7 +87,7 @@ class DiscusionController extends Controller
                 return abort(404);
             }
         }
-        $discussions = Discusion::with(['user', 'matpel'])
+        $discussions = Discusion::with(['user', 'matpel', 'comments', 'linkedObject'])
             ->where('kelas_id', $kelas_id)
             ->latest()
             ->get()->map(function ($item) {
@@ -72,6 +107,22 @@ class DiscusionController extends Controller
         $discussion->increment('likes');
 
         return redirect()->back()->with('message', 'Disukai!');
+    }
+    public function delete(Request $request, string $discussion)
+    {
+        $user = Auth::user();
+
+        $discusion = Discusion::findOrFail($discussion);
+        if ($discusion) {
+            $discusion->delete();
+        }
+        if ($discusion->user_id == $user->id || $user->role == 'guru') {
+            return back();
+        } else {
+            return redirect()->back()->withErrors([
+                'gagal' => "Data gagal dihapus"
+            ]);
+        }
     }
     public function store(Request $request, String $kelas_id, string $matpel_kode)
     {

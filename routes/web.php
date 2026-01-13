@@ -38,7 +38,11 @@ Route::middleware('authenticated')->group(function () {
     Route::post('discusion/{kelas_id}/matpel-{matpels_id}', [DiscusionController::class, 'store'])->name('siswa.discusion.store');
     Route::post('/discussion/{discussion}/like', [DiscusionController::class, 'like'])->name('discussion.like');
     //commentar
-    Route::post('discusion/{kelas_id}/matpel-{matpels_id}/comments', [DiscusionController::class, 'comments'])->name('siswa.discusion.comments');
+    Route::get('discusion/{kelas_id}/matpel-{matpels_id}/{discusion}/comments', [DiscusionController::class, 'comments'])->name('siswa.discusion.comments');
+    Route::delete('discusion/{discusion}/delete', [DiscusionController::class, 'delete'])->name('siswa.discusion.delete');
+
+
+    Route::post('discusion/{discusion}/comments', [DiscusionController::class, 'postComment'])->name('siswa.discusion.postComment');
 
     Route::prefix('admin')->middleware('authenticated:admin')->name('admin.')->group(base_path('routes/admin.php'));
     Route::get('/', DashboardController::class)->name('home');

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Facades\Youtube;
+use App\Models\Discusion;
 use App\Models\Materi;
 use App\Models\Matpel;
 use App\Models\Pengajaran;
@@ -105,11 +106,26 @@ class MateriService implements MateriServiceInterface
             ]);
             if ($save) {
                 $matpel = Matpel::find($matpel);
-                foreach ($user as $data) {
-                    $data->user->notify(new FcmNotification(
-                        "Materi Baru",
-                        "Ada Materi Baru Pada matpel " . $matpel->nama,
-                    ));
+                if (is_array($kelass)) {
+                    foreach ($kelass as $kelazz) {
+                        Discusion::create([
+                            'object_type' => 'materi',
+                            'object_type_id' => $save->id,
+                            'user_id' => $guru_id,
+                            'kelas_id' => $kelazz,
+                            'matpel_kode' => $matpel->kode,
+                            'description' => "Materi baru"
+                        ]);
+                    }
+                } else {
+                    Discusion::create([
+                        'object_type' => 'materi',
+                        'object_type_id' => $save->id,
+                        'user_id' => $guru_id,
+                        'kelas_id' => $kelas_kode,
+                        'matpel_kode' => $matpel->kode,
+                        'description' => "Materi baru"
+                    ]);
                 }
             }
             return $save;

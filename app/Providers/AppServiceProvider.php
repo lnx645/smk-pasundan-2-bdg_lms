@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Discusion;
+use App\Models\Materi;
+use App\Models\Tugas;
 use App\Service\AuthServiceImpl;
 use App\Service\Contract\AuthServiceInterface;
 use App\Service\Contract\KelasServiceInterface;
@@ -10,6 +13,7 @@ use App\Service\KelasServiceImpl;
 use App\Service\MateriService;
 use App\Service\Contract\MateriServiceInterface;
 use App\Service\MatpelService;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,5 +37,10 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+        Relation::morphMap([
+            'materi' => Materi::class,
+            'tugas'  => Tugas::class,
+            'forum'  => Discusion::class,
+        ]);
     }
 }
