@@ -1,5 +1,5 @@
 <template>
-    <div class="mx-auto min-h-screen max-w-4xl bg-[#fbfbfb] px-4 py-8">
+    <div class="mx-auto min-h-screen max-w-4xl bg-[#fbfbfb] px-4 py-4">
         <div class="mb-6">
             <h1 class="text-xl font-bold text-slate-800">Forum {{ current_matpel_name }}</h1>
             <p class="text-sm text-slate-500">Ruang diskusi, tanya jawab, dan berbagi materi kelas</p>
@@ -110,10 +110,10 @@
                                 </div>
 
                                 <div class="min-w-0">
-                                    <h4 class="truncate text-base font-bold text-slate-900">
+                                    <h4 class="truncate text-sm font-bold text-slate-900">
                                         {{ item.linked_object.judul || item.linked_object.nama || 'Materi Baru' }}
                                     </h4>
-                                    <p class="truncate text-sm font-medium text-indigo-900/80">Klik tombol detail untuk membuka materi</p>
+                                    <p class="truncate text-xs font-medium text-indigo-900/80">Klik tombol detail untuk membuka materi</p>
                                 </div>
                             </div>
 
