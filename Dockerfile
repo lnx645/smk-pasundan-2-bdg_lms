@@ -30,7 +30,7 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 # 9. Copy konfigurasi Nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-
+RUN php artisan storage:link
 # 10. Optimasi Laravel
 # Sangat penting dijalankan setelah composer install
 RUN php artisan config:cache
