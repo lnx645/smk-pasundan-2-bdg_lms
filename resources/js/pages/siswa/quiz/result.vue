@@ -2,13 +2,10 @@
 import QuizSiswaController from '@/actions/App/Http/Controllers/QuizSiswaController';
 import { Head, Link } from '@inertiajs/vue3';
 
-// Asumsi: Anda menggunakan Ziggy untuk routing.
-// Jika menggunakan helper class custom seperti di kode asli Anda, silakan sesuaikan href-nya.
-
 const props = defineProps({
     quiz: Object,
     attempt: Object,
-    stats: Object, // { total_questions, correct_answers, is_passed }
+    stats: Object,
 });
 </script>
 

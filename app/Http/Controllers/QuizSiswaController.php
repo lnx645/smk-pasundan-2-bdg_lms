@@ -83,7 +83,6 @@ class QuizSiswaController extends Controller
     {
         if ($attempt->user_id !== Auth::id()) abort(403);
 
-        // Jika sudah selesai, lempar ke halaman result
         if ($attempt->finished_at) {
             return redirect()->route('siswa.quiz.result', $attempt->id);
         }
