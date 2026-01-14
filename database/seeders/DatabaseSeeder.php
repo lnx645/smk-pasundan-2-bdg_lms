@@ -21,12 +21,12 @@ class DatabaseSeeder extends Seeder
                 'is_admin' => true
             ]);
         }
-        $this->call([
-            MatpelSeeder::class,
-            KelasSeeder::class,
-            SiswaSeeder::class,
-            GuruSeeder::class,
-            MateriSeeder::class,
-        ]);
+        // $this->call([
+        //     MatpelSeeder::class,
+        //     KelasSeeder::class,
+        //     SiswaSeeder::class,
+        //     GuruSeeder::class,
+        //     MateriSeeder::class,
+        // ]);
     }
 }

@@ -5,7 +5,7 @@
             <p class="text-sm text-slate-500">Ruang diskusi, tanya jawab, dan berbagi materi kelas</p>
         </div>
 
-        <div class="mb-8 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div class="mb-8 rounded-xl border border-slate-100 bg-white p-5">
             <div class="flex gap-4">
                 <div class="hidden shrink-0 sm:block">
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
@@ -39,7 +39,7 @@
         </div>
 
         <div class="space-y-6">
-            <div v-for="item in discussions" :key="item.id" class="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div v-for="item in discussions" :key="item.id" class="rounded-xl border border-slate-100 bg-white p-5">
                 <div class="mb-4 flex items-start justify-between">
                     <div class="flex gap-3">
                         <div class="shrink-0">
@@ -82,7 +82,7 @@
 
                     <div v-if="item.object_type === 'materi' && item.linked_object" class="mt-4">
                         <div
-                            class="flex items-center justify-between rounded-lg border border-slate-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                            class="flex items-center justify-between rounded-lg border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
                         >
                             <div class="flex items-center gap-4 overflow-hidden">
                                 <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
