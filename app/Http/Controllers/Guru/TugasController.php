@@ -8,11 +8,13 @@ use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\Tugas;
 use App\Models\User;
+use App\Notifications\NewTugasNotification;
 use App\Service\Contract\KelasServiceInterface;
 use App\Service\Contract\MatpelServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class TugasController extends Controller
 {
@@ -170,7 +172,7 @@ class TugasController extends Controller
                 'receiver_type_id' => ['required'],
                 'receiver_type' => ['required']
             ]);
-            Tugas::create([
+            $tugas =   Tugas::create([
                 'matpel_kode'       => $data['matpel'],
                 'receiver_type_id' => $data['receiver_type_id'],
                 'receiver_type' => $data['receiver_type'],
@@ -181,9 +183,23 @@ class TugasController extends Controller
                 'publish_date'      => now(), // atau isi sesuai kebutuhan
                 'created_by_user_id' => $request->user()->id,
             ]);
-            return  redirect()->back()->withErrors([
-                'success' => "Tugas Berhasil di simpan!"
-            ]);
+            if ($data['receiver_type'] == 'class_id') {
+
+                $classIds = $data['receiver_type_id'];
+                if (!is_array($classIds)) {
+                    $classIds = [$classIds];
+                }
+
+                $receivers = User::whereHas('siswa', function ($query) use ($classIds) {
+                    $query->whereIn('kelas_id', $classIds);
+                })->get();
+                if ($receivers->count() > 0) {
+                    Notification::send($receivers, new NewTugasNotification($tugas, $request->user()));
+                }
+                return  redirect()->back()->withErrors([
+                    'success' => "Tugas Berhasil di simpan!"
+                ]);
+            }
         } catch (\Throwable $th) {
             return  redirect()->back()->withErrors([
                 'gagal' => "Tugas gagal di simpan!"

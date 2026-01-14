@@ -5,7 +5,22 @@
     >
         <div class="container mx-auto flex h-24 items-center justify-between px-4 lg:px-0">
             <Logo />
-            <div ref="profileRef" class="relative z-50">
+            <div ref="profileRef" class="relative z-50 flex items-center justify-center gap-x-6">
+                <div class="flex items-center gap-4">
+                    <Link
+                        :href="NotificationController.index()"
+                        class="relative flex items-center justify-center rounded-full p-2 text-gray-600 transition-colors"
+                    >
+                        <BellIcon class="h-6 w-6" color="white" />
+
+                        <span
+                            v-if="notif_count"
+                            class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white"
+                        >
+                            {{ notif_count }}
+                        </span>
+                    </Link>
+                </div>
                 <button
                     @click="toggleProfile"
                     class="flex items-center justify-center rounded-full bg-white transition-transform focus:ring-2 focus:ring-white/20 focus:outline-none active:scale-95"
@@ -83,16 +98,18 @@
 import ProfileController from '@/actions/App/Http/Controllers/ProfileController';
 import SiswaSecurityController from '@/actions/App/Http/Controllers/SiswaSecurityController';
 import Avatar from '@/components/avatar.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { onClickOutside } from '@vueuse/core';
 import { AnimatePresence, motion } from 'motion-v';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import Logo from './logo.vue';
 import AppMenu from './menu/app-menu.vue';
+const page = usePage();
 
-// Icons (Heroicons v2 Outline)
-import { ArrowRightOnRectangleIcon, ShieldCheckIcon, UserIcon } from '@heroicons/vue/24/outline';
-
+import NotificationController from '@/actions/App/Http/Controllers/NotificationController';
+import { ShieldCheckIcon, UserIcon } from '@heroicons/vue/24/outline';
+import { BellIcon } from 'lucide-vue-next';
+const notif_count = computed(() => page.props.notif_count);
 const profileOpen = ref(false);
 const profileRef = ref(null);
 

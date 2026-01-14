@@ -10,8 +10,10 @@ use App\Http\Controllers\MateriController;
 use App\Http\Controllers\NotifServiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DiscusionController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SiswaSecurityController;
 use App\Http\Controllers\TugasSiswaController;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/fcm-cloud/save-fcm-token', [NotifServiceController::class, 'saveFcmToken'])->name('save-fcm-token');
@@ -61,6 +63,9 @@ Route::middleware('authenticated')->group(function () {
             Route::get("", SiswaSecurityController::class)->name('index');
             Route::post("", [SiswaSecurityController::class, 'update'])->name('update');
         });
+
+
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notification');
     });
 
     // --- GURU ROUTES ---

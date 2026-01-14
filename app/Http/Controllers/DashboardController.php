@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tugas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -21,13 +22,13 @@ class DashboardController extends Controller
                 ->whereDoesntHave('jawaban', function ($q) use ($user) {
                     $q->where('answered_by_id', $user->id);
                 })
-                ->where('deadline', '>', now()) // Hanya yang belum deadline
+                ->where('deadline', '>', now())
                 ->with('matpel')
-                ->orderBy('deadline', 'asc') // Urutkan yang paling mepet
-                ->limit(5) // Ambil 5 saja buat sidebar
+                ->orderBy('deadline', 'asc')
+                ->limit(5)
                 ->get();
         }
-        
-        return inertia('home',['pending_tugas'=>$pending_tugas]);
+
+        return inertia('home', ['pending_tugas' => $pending_tugas]);
     }
 }

@@ -1,5 +1,5 @@
 <template>
-    <div class="mx-auto min-h-screen max-w-4xl bg-[#fbfbfb] px-4">
+    <div class="mx-auto min-h-screen max-w-4xl px-4">
         <PageTitle :title="`Forum ${current_matpel_name}`" subtitle="Ruang diskusi, tanya jawab, dan berbagi materi kelas" />
         <div class="mb-8 rounded-xl border border-slate-100 bg-white p-5">
             <div class="flex gap-4">

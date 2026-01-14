@@ -9,11 +9,13 @@ use App\Models\Matpel;
 use App\Models\Pengajaran;
 use App\Models\Siswa;
 use App\Notifications\FcmNotification;
+use App\Notifications\NewMateriNotification;
 use App\Service\Contract\MateriServiceInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class MateriService implements MateriServiceInterface
 {
@@ -90,6 +92,7 @@ class MateriService implements MateriServiceInterface
             $kelass = $data['kelas_ids'] ?? [];
             $matpel = $data['matpel']['kode_matpel'];
             $nomorMateriTerakhir = $this->getMateri($kelas_kode, $matpel)->max('nomor_materi');
+
             $save = Materi::create([
                 'title' => $data['title'],
                 'created_by_user_id' => $guru_id,
@@ -104,6 +107,11 @@ class MateriService implements MateriServiceInterface
             ]);
             if ($save) {
                 $matpel = Matpel::find($matpel);
+                $users = Siswa::with('user')->whereIn('kelas_id', $kelass)->get()->pluck('user');
+                //indonesia
+                if ($users->isNotEmpty()) {
+                    Notification::sendNow($users, new NewMateriNotification($save));
+                }
                 if (is_array($kelass)) {
                     foreach ($kelass as $kelazz) {
                         Discusion::create([
