@@ -73,7 +73,7 @@ const saveAssignment = () => {
                         <label class="text-xs font-medium text-gray-700">Mata Pelajaran</label>
                         <select
                             v-model="newAssignment.matpel_kode"
-                            class="block w-full px-2 outline-none rounded-lg border border-gray-200 py-2 text-xs focus:border-indigo-500 focus:ring-indigo-500"
+                            class="block w-full rounded-lg border border-gray-200 px-2 py-2 text-xs outline-none focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="" disabled>Pilih Matpel...</option>
                             <option v-for="mp in availableMatpels" :key="mp.kode" :value="mp.kode">
@@ -86,7 +86,7 @@ const saveAssignment = () => {
                         <label class="text-xs font-medium text-gray-700">Kelas</label>
                         <select
                             v-model="newAssignment.kelas_id"
-                            class="block w-full px-2 outline-none rounded-lg border border-gray-200 py-2 text-xs focus:border-indigo-500 focus:ring-indigo-500"
+                            class="block w-full rounded-lg border border-gray-200 px-2 py-2 text-xs outline-none focus:border-indigo-500 focus:ring-indigo-500"
                         >
                             <option value="" disabled>Pilih Kelas...</option>
                             <option v-for="kls in availableKelas" :key="kls.id" :value="kls.id">
@@ -122,10 +122,10 @@ const saveAssignment = () => {
             >
                 <div class="flex items-center gap-3">
                     <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-xs font-bold text-orange-600">
-                        {{ index + 1 }}
+                        {{ (index as number) + 1 }}
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-gray-900">
+                        <p class="line-clamp-1 text-sm font-medium text-gray-900">
                             {{ ajar.matpel?.nama || ajar.matpel?.nama_pelajaran || 'Matpel Tidak Ada' }}
                         </p>
                         <p class="flex items-center gap-1 text-xs text-gray-500">
@@ -138,7 +138,7 @@ const saveAssignment = () => {
                 <span
                     class="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm ring-1 ring-gray-200 transition-all ring-inset group-hover:text-indigo-700 group-hover:ring-indigo-200"
                 >
-                    Kelas {{ ajar.kelas?.nama || ajar.kelas?.nama_kelas || '?' }}
+                    {{ ajar.kelas?.nama || ajar.kelas?.nama_kelas || '?' }}
                 </span>
             </div>
 

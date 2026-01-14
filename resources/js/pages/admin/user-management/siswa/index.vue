@@ -2,15 +2,16 @@
 import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Pencil, Plus, Search, Trash2, FileSpreadsheet } from 'lucide-vue-next';
+import { FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 //@ts-ignore
+import Modal from '@/components/ui/modal.vue';
+import { debounce } from 'lodash';
+//@ts-ignore
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
-import Modal from '@/components/ui/modal.vue';
 import ImportSiswaModal from './import-modal-siswa.vue';
-import { debounce } from 'lodash';
 
 const props = defineProps<{
     users: any;
@@ -30,20 +31,29 @@ const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 
 const search = ref(props.filters?.search || '');
 const showImportModal = ref(false);
+const statusMap: Record<string, string> = {
+    aktif: 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-600/20',
+    lulus: 'bg-blue-100 text-blue-700 ring-1 ring-blue-600/20',
+    keluar: 'bg-rose-100 text-rose-700 ring-1 ring-rose-600/20',
+    tinggal_kelas: 'bg-amber-100 text-amber-700 ring-1 ring-amber-600/20',
+};
 
+const formatStatus = (status: string) => {
+    return status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+};
 watch(
     search,
     debounce((value: string) => {
         router.get(
-            UserManagementController.siswa().url, 
+            UserManagementController.siswa().url,
             { search: value },
             {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-            }
+            },
         );
-    }, 300)
+    }, 300),
 );
 
 // Logic Delete
@@ -61,7 +71,7 @@ const handleDelete = (user: any) => {
         },
         onError: (errors: any) => {
             // Ambil flash error dari usePage() untuk notifikasi (ini aman pakai usePage)
-            const page = usePage(); 
+            const page = usePage();
             if ((page.props.flash as any)?.error) {
                 toast.error((page.props.flash as any).error);
             } else {
@@ -146,10 +156,10 @@ const handleDelete = (user: any) => {
 
                         <td class="px-6 py-4 text-center">
                             <span
-                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                :class="user.siswa.status === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold shadow-sm transition-all"
+                                :class="statusMap[user.siswa.status.toLowerCase()] || 'bg-gray-100 text-gray-600'"
                             >
-                                {{ user.siswa.status }}
+                                {{ formatStatus(user.siswa.status) }}
                             </span>
                         </td>
 

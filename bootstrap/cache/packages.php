@@ -1,4 +1,15 @@
 <?php return array (
+  'barryvdh/laravel-debugbar' => 
+  array (
+    'aliases' => 
+    array (
+      'Debugbar' => 'Barryvdh\\Debugbar\\Facades\\Debugbar',
+    ),
+    'providers' => 
+    array (
+      0 => 'Barryvdh\\Debugbar\\ServiceProvider',
+    ),
+  ),
   'barryvdh/laravel-dompdf' => 
   array (
     'aliases' => 
@@ -72,6 +83,17 @@
     'providers' => 
     array (
       0 => 'Rap2hpoutre\\FastExcel\\Providers\\FastExcelServiceProvider',
+    ),
+  ),
+  'spatie/laravel-google-cloud-storage' => 
+  array (
+    'aliases' => 
+    array (
+      'GoogleCloudStorage' => 'Spatie\\GoogleCloudStorage\\GoogleCloudStorageFacade',
+    ),
+    'providers' => 
+    array (
+      0 => 'Spatie\\GoogleCloudStorage\\GoogleCloudStorageServiceProvider',
     ),
   ),
   'spatie/laravel-pdf' => 

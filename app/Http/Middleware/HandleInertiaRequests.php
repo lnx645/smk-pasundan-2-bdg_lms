@@ -6,6 +6,7 @@ use App\Service\AuthServiceImpl;
 use App\Service\Contract\AuthServiceInterface;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -39,8 +40,12 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-        
+        $notif = 0;
+        if (Auth::check()) {
+            $notif = Auth::user()->unreadNotifications->count();
+        }
         return [
+            'notif_count' => $notif,
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],

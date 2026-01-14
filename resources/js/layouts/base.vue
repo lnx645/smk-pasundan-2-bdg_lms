@@ -3,14 +3,14 @@ import { saveFcmToken } from '@/actions/App/Http/Controllers/NotifServiceControl
 import '@vuepic/vue-datepicker/dist/main.css';
 import axios from 'axios';
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging'; // Tambah isSupported
-import { onMounted, ref } from 'vue';
+import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging'; // Tambah isSupported
+import 'sweetalert2/dist/sweetalert2.css';
+import { onMounted } from 'vue';
 import { ModalsContainer } from 'vue-final-modal';
 import 'vue-final-modal/style.css';
 import 'vue-select/dist/vue-select.css';
 import { toast, Toaster } from 'vue-sonner';
 import 'vue-sonner/style.css';
-
 // Firebase config
 const firebaseConfig = {
     apiKey: 'AIzaSyBC8OjU6vxFqVHzMsY6Pt3iwFOuUEIhc-E',
@@ -29,7 +29,7 @@ const initFirebase = async () => {
         if (supported) {
             const app = initializeApp(firebaseConfig);
             messaging = getMessaging(app);
-            
+
             setupMessageListener();
         } else {
             console.warn('Firebase Messaging not supported in this browser.');
@@ -40,7 +40,7 @@ const initFirebase = async () => {
 };
 
 async function requestPermission() {
-    if (!messaging) return; 
+    if (!messaging) return;
 
     if (!('Notification' in window)) {
         return toast.error('Browser tidak mendukung Notifications');
@@ -68,10 +68,9 @@ async function getFcmToken() {
         }
 
         const registration = await navigator.serviceWorker.ready;
-        
+
         const oldToken = localStorage.getItem('fcm_token');
         if (oldToken) {
-            
             return;
         }
 
@@ -87,10 +86,9 @@ async function getFcmToken() {
         }
 
         await axios.post(saveFcmToken().url, { token });
-        
+
         localStorage.setItem('fcm_token', token);
         console.log('FCM Token Saved');
-
     } catch (err) {
         console.error('FCM Get Token Error:', err);
     }
@@ -120,7 +118,7 @@ onMounted(async () => {
                 scope: '/',
             });
             console.log('SW registered:', registration);
-            
+
             await requestPermission();
         }
     } catch (e) {
@@ -134,3 +132,8 @@ onMounted(async () => {
     <ModalsContainer />
     <Toaster :rich-colors="true" />
 </template>
+<style lang="css">
+body {
+    background: #f4f4f4 !important;
+}
+</style>

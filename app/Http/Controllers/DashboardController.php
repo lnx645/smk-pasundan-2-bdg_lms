@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tugas;
 use App\Models\Quiz; // Jangan lupa import Model Quiz
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -51,5 +52,12 @@ class DashboardController extends Controller
             'pending_tugas' => $pending_tugas,
             'active_quizzes' => $active_quizzes, // Kirim ke Vue
         ]);
+                ->with('matpel')
+                ->orderBy('deadline', 'asc')
+                ->limit(5)
+                ->get();
+        }
+
+        return inertia('home', ['pending_tugas' => $pending_tugas]);
     }
 }

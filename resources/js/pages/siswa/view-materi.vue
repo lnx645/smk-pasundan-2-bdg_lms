@@ -37,7 +37,7 @@ const page = usePage().props;
         <hr class="my-3 text-neutral-300" />
         <div class="flex flex-col space-y-4">
             <div class="overflow-hidden rounded">
-                <VideoPlayer :yt-id="page.materi.youtube_id" />
+                <VideoPlayer class="w-[50%]" :yt-id="page.materi.youtube_id" />
             </div>
             <div>
                 <h2 class="text-sm font-semibold text-blue-500">Description:</h2>
@@ -49,7 +49,7 @@ const page = usePage().props;
                 <ul class="space-y-2 text-xs text-blue-500 lg:space-y-0 lg:text-sm">
                     <li v-for="(i, num) in page.materi.file_materi" class="flex flex-col lg:flex-row lg:items-center lg:gap-1">
                         <span class="text-neutral-700">
-                            {{ i.name || '#' + (num + 1) }}
+                            {{ i.name || '#' + ((num as number) + 1) }}
                         </span>
                         <a class="transition-all hover:ring-1 lg:px-1 lg:hover:text-red-500" :href="i.links || i">
                             {{ i.links || i }}
