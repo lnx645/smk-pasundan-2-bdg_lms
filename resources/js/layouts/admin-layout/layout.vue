@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAdminSidebarStore } from '@/features/store/admin-sidebar.store';
 import { onClickOutside, useMediaQuery } from '@vueuse/core';
-import { onMounted, useTemplateRef, watch } from 'vue';
+import { useTemplateRef } from 'vue';
 import Base from '../base.vue';
 import Header from './header.vue';
 import Sidebar from './sidebar.vue';
@@ -9,14 +9,17 @@ const store = useAdminSidebarStore();
 const sidebarRef = useTemplateRef('sidebarRef');
 const mk = useMediaQuery('(min-width: 1024px)');
 
-onClickOutside(sidebarRef, (e) => {
-    if (store.isOpen && !mk.value) {
-        store.setOpen(false);
-    }
-},{
-    ignore : ['#sidebar-trigger']
-});
-
+onClickOutside(
+    sidebarRef,
+    (e) => {
+        if (store.isOpen && !mk.value) {
+            store.setOpen(false);
+        }
+    },
+    {
+        ignore: ['#sidebar-trigger'],
+    },
+);
 </script>
 
 <template>
