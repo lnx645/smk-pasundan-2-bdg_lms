@@ -132,3 +132,8 @@ onMounted(async () => {
     <ModalsContainer />
     <Toaster :rich-colors="true" />
 </template>
+<style lang="css">
+body {
+    background: #f4f4f4 !important;
+}
+</style>

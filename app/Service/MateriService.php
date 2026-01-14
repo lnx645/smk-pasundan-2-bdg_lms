@@ -90,8 +90,6 @@ class MateriService implements MateriServiceInterface
             $kelass = $data['kelas_ids'] ?? [];
             $matpel = $data['matpel']['kode_matpel'];
             $nomorMateriTerakhir = $this->getMateri($kelas_kode, $matpel)->max('nomor_materi');
-            $user = Siswa::with('user')->whereIn('kelas_id', $kelass)->get();
-
             $save = Materi::create([
                 'title' => $data['title'],
                 'created_by_user_id' => $guru_id,

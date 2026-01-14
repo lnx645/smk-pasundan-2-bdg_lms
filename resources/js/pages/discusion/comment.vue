@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-3xl px-4 py-4 pb-28">
         <PageTitle :title="`Diskusi`" subtitle="Detail percakapan" />
 
-        <div class="mt-6 bg-white">
+        <div class="mt-6">
             <div class="mb-4 flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
                     {{ discusion.user.name.charAt(0) }}

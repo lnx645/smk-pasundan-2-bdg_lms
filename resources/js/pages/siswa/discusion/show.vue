@@ -1,10 +1,6 @@
 <template>
-    <div class="mx-auto min-h-screen max-w-4xl bg-[#fbfbfb] px-4 py-4">
-        <div class="mb-6">
-            <h1 class="text-xl font-bold text-slate-800">Forum {{ current_matpel_name }}</h1>
-            <p class="text-sm text-slate-500">Ruang diskusi, tanya jawab, dan berbagi materi kelas</p>
-        </div>
-
+    <div class="mx-auto min-h-screen max-w-4xl bg-[#fbfbfb] px-4">
+        <PageTitle :title="`Forum ${current_matpel_name}`" subtitle="Ruang diskusi, tanya jawab, dan berbagi materi kelas" />
         <div class="mb-8 rounded-xl border border-slate-100 bg-white p-5">
             <div class="flex gap-4">
                 <div class="hidden shrink-0 sm:block">
@@ -168,9 +164,9 @@ import { computed, ref } from 'vue';
 
 // Icons
 import { Heart, MessageCircle, Send, Trash2 } from 'lucide-vue-next';
-
 // Components & Utils
 import DiscusionController from '@/actions/App/Http/Controllers/DiscusionController';
+import PageTitle from '@/layouts/page-title.vue';
 import { view } from '@/routes/siswa/materi';
 
 // Props Definition

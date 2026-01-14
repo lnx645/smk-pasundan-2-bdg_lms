@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Rap2hpoutre\FastExcel\FastExcel as Rap2hpoutreFastExcel;
+use Rap2hpoutre\FastExcel\FastExcel;
 
 class UserManagementController extends Controller
 {
@@ -31,10 +31,9 @@ class UserManagementController extends Controller
 
     public function users(Request $request)
     {
-        // Ambil user murni (bukan guru & bukan siswa)
         $query = User::query()->doesntHave('guru')->doesntHave('siswa');
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -42,7 +41,9 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return inertia('admin/user-management/users/index', [
             'users'   => $users,
@@ -84,6 +85,7 @@ class UserManagementController extends Controller
 
         $request->validate([
             'name'  => 'required|string|max:255',
+            // Perbaikan: Ignore ID user saat validasi unique email
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
         ]);
 
@@ -109,7 +111,8 @@ class UserManagementController extends Controller
             return back()->with('error', 'Anda tidak dapat menghapus akun sendiri.');
         }
 
-        if ($user->guru || $user->siswa) {
+        // Cek relasi sebelum hapus
+        if ($user->guru()->exists() || $user->siswa()->exists()) {
             return back()->with('error', 'User terhubung dengan data Guru/Siswa. Hapus lewat menu terkait.');
         }
 
@@ -129,7 +132,7 @@ class UserManagementController extends Controller
     {
         $query = User::query()->whereHas('guru');
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function (Builder $q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -140,7 +143,10 @@ class UserManagementController extends Controller
             });
         }
 
+        // FIX N+1: Tambahkan 'guru' di level pertama array with()
+        // Ini memastikan relation guru dimuat SEBELUM accessor di User.php dijalankan
         $users = $query->with([
+            'guru', // <--- PENTING
             'guru.matpels',
             'guru.pengajarans.kelas',
             'guru.spesialisMatpel',
@@ -173,24 +179,22 @@ class UserManagementController extends Controller
             'jenis_kelamin'  => 'required|in:L,P',
             'status'         => 'required',
             'foto'           => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'gelar_depan'    => 'nullable|string|max:50',
-            'gelar_belakang' => 'nullable|string|max:50',
             'matpel_kode'    => 'nullable|exists:matpels,kode',
         ]);
 
-        $user = DB::transaction(function () use ($request) {
-            $emailGenerated = EmailGenerator::generateEmailDomain($request->nip);
-            $passwordRaw = $request->nip . "-" . Carbon::now()->format("Y");
+        $passwordDefault = $request->nip . "-" . Carbon::now()->format("Y");
 
+        DB::transaction(function () use ($request, $passwordDefault) {
             $user = User::create([
                 'name'     => $request->name,
-                'email'    => $emailGenerated,
-                'password' => Hash::make($passwordRaw),
+                'email'    => EmailGenerator::generateEmailDomain($request->nip),
+                'password' => Hash::make($passwordDefault),
             ]);
 
-            $photoPath = $request->hasFile('foto')
-                ? $request->file('foto')->store('guru-photos', 'public')
-                : null;
+            $photoPath = null;
+            if ($request->hasFile('foto')) {
+                $photoPath = $request->file('foto')->store('guru-photos', 'public');
+            }
 
             Guru::create([
                 'nip'            => $request->nip,
@@ -202,16 +206,14 @@ class UserManagementController extends Controller
                 'foto'           => $photoPath,
                 'matpel_kode'    => $request->matpel_kode,
             ]);
-
-            return $user;
         });
 
-        $passwordDefault = $request->nip . "-" . Carbon::now()->format("Y");
         return back()->with(['success' => "Data Guru ditambahkan. Pass: $passwordDefault"]);
     }
 
     public function editGuru($id)
     {
+        // Eager load user untuk form edit
         $guru = Guru::with('user')->findOrFail($id);
         $matpels = Matpel::select('kode', 'nama')->orderBy('nama')->get();
 
@@ -229,16 +231,16 @@ class UserManagementController extends Controller
             'nip'            => ['required', 'numeric', Rule::unique('gurus', 'nip')->ignore($guru->nip, 'nip')],
             'name'           => 'required|string|max:255',
             'jenis_kelamin'  => 'required|in:L,P',
-            'status'         => 'required|in:aktif,nonaktif,Aktif,Nonaktif',
+            'status'         => 'required',
             'foto'           => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'gelar_depan'    => 'nullable|string|max:50',
-            'gelar_belakang' => 'nullable|string|max:50',
             'matpel_kode'    => 'nullable|exists:matpels,kode',
         ]);
 
         DB::transaction(function () use ($request, $guru) {
-            $guru->user->update(['name' => $request->name]);
+            // Update User
+            $guru->user()->update(['name' => $request->name]);
 
+            // Handle Foto
             $photoPath = $guru->foto;
             if ($request->hasFile('foto')) {
                 if ($guru->foto && $guru->foto !== 'guru-default.png' && Storage::disk('public')->exists($guru->foto)) {
@@ -247,6 +249,7 @@ class UserManagementController extends Controller
                 $photoPath = $request->file('foto')->store('guru-photos', 'public');
             }
 
+            // Update Guru
             $guru->update([
                 'nip'            => $request->nip,
                 'gelar_depan'    => $request->gelar_depan,
@@ -271,17 +274,18 @@ class UserManagementController extends Controller
             DB::transaction(function () use ($request) {
                 $path = $request->file('file')->getRealPath();
 
-                (new Rap2hpoutreFastExcel())->import($path, function ($line) {
+                (new FastExcel)->import($path, function ($line) {
+                    // Skip jika NIP kosong atau sudah ada
                     if (empty($line['nip'])) return null;
                     if (Guru::where('nip', $line['nip'])->exists()) return null;
 
-                    // Validasi Kode Mapel (Set NULL jika tidak valid)
+                    // Validasi Kode Mapel
                     $kodeMapel = $line['kode_mapel'] ?? null;
                     if ($kodeMapel && !Matpel::where('kode', $kodeMapel)->exists()) {
                         $kodeMapel = null;
                     }
 
-                    $nip = $line['nip'];
+                    $nip = trim($line['nip']); // Bersihkan spasi
                     $password = $nip . '-' . Carbon::now()->format('Y');
 
                     $user = User::create([
@@ -293,7 +297,7 @@ class UserManagementController extends Controller
                     return Guru::create([
                         'nip'            => $nip,
                         'user_id'        => $user->id,
-                        'jenis_kelamin'  => strtoupper($line['jk']),
+                        'jenis_kelamin'  => strtoupper(trim($line['jk'])),
                         'status'         => strtolower($line['status'] ?? 'aktif'),
                         'gelar_depan'    => $line['gelar_depan'] ?? null,
                         'gelar_belakang' => $line['gelar_belakang'] ?? null,
@@ -320,7 +324,7 @@ class UserManagementController extends Controller
             'gelar_belakang' => 'M.Pd',
             'kode_mapel' => 'MTK'
         ]];
-        return (new Rap2hpoutreFastExcel($data))->download('template_guru.xlsx');
+        return (new FastExcel($data))->download('template_guru.xlsx');
     }
 
 
@@ -334,7 +338,7 @@ class UserManagementController extends Controller
     {
         $query = User::query()->whereHas('siswa');
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function (Builder $q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -345,9 +349,13 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->with(['siswa.kelas'])
-            ->orderBy('users.name', 'asc') // Urutkan berdasarkan kolom name di tabel users
-            ->paginate(5)
+        // FIX N+1: Tambahkan 'siswa' secara eksplisit
+        $users = $query->with([
+            'siswa',       // <--- PENTING
+            'siswa.kelas'  // Load relasi nested
+        ])
+            ->orderBy('name', 'asc') // Urutkan berdasarkan kolom name di tabel users
+            ->paginate(10) // Naikkan pagination biar tidak terlalu sering klik next
             ->withQueryString();
 
         return inertia('admin/user-management/siswa/index', [
@@ -355,6 +363,7 @@ class UserManagementController extends Controller
             'filters' => $request->only(['search']),
         ]);
     }
+
     public function tambahSiswa()
     {
         return inertia('admin/user-management/siswa/tambah', ['kelasList' => Kelas::all()]);
@@ -363,17 +372,13 @@ class UserManagementController extends Controller
     public function simpanSiswa(Request $request)
     {
         $request->validate([
-            'nis'         => 'required|unique:siswas,nis',
-            'pas_photo'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'name'        => 'required',
-            'agama'       => 'required',
-            'tahun_masuk' => 'required',
-            'tingkat'     => 'required',
-            'kelas_id'    => 'required',
-            'status'      => 'required',
+            'nis'           => 'required|unique:siswas,nis',
+            'name'          => 'required',
+            'kelas_id'      => 'required|exists:kelas,id',
+            'pas_photo'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $user = DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request) {
             $email = EmailGenerator::generateEmailDomain($request->nis);
             $password = $request->nis . "-" . Carbon::now()->format("Y");
 
@@ -399,8 +404,6 @@ class UserManagementController extends Controller
                 'pas_photo'     => $photoPath,
                 'kelas_id'      => $request->kelas_id,
             ]);
-
-            return $user;
         });
 
         return back()->with(['success' => "Data Siswa berhasil ditambahkan"]);
@@ -422,19 +425,18 @@ class UserManagementController extends Controller
         $siswa = Siswa::findOrFail($id);
 
         $request->validate([
-            'name'        => 'required',
-            'nis'         => 'required',
-            'agama'       => 'required',
-            'tahun_masuk' => 'required',
-            'tingkat'     => 'required',
-            'kelas_id'    => 'required',
-            'status'      => 'required',
-            'pas_photo'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'name'      => 'required',
+            // Perbaikan unique rule untuk NIS (abaikan NIS siswa ini sendiri)
+            'nis'       => ['required', Rule::unique('siswas', 'nis')->ignore($siswa->id)],
+            'kelas_id'  => 'required|exists:kelas,id',
+            'pas_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         DB::transaction(function () use ($request, $siswa) {
-            $siswa->user->update(['name' => $request->name]);
+            // Update User
+            $siswa->user()->update(['name' => $request->name]);
 
+            // Handle Photo
             if ($request->hasFile('pas_photo')) {
                 if ($siswa->pas_photo && $siswa->pas_photo !== 'siswa.png' && Storage::disk('public')->exists($siswa->pas_photo)) {
                     Storage::disk('public')->delete($siswa->pas_photo);
@@ -442,15 +444,21 @@ class UserManagementController extends Controller
                 $siswa->pas_photo = $request->file('pas_photo')->store('siswa-photos', 'public');
             }
 
-            $siswa->update([
-                'nis'           => $request->nis,
-                'jenis_kelamin' => $request->jenis_kelamin,
-                'agama'         => $request->agama,
-                'tahun_masuk'   => $request->tahun_masuk,
-                'tingkat'       => $request->tingkat,
-                'kelas_id'      => $request->kelas_id,
-                'status'        => $request->status,
-            ]);
+            // Update Siswa (Gunakan property fillable di model Siswa)
+            $siswa->update($request->only([
+                'nis',
+                'jenis_kelamin',
+                'agama',
+                'tahun_masuk',
+                'tingkat',
+                'kelas_id',
+                'status'
+            ]));
+
+            // Jika Anda ingin menyimpan foto path ke database
+            if ($request->hasFile('pas_photo')) {
+                $siswa->save();
+            }
         });
 
         return to_route('admin.user-management.siswa')->with('success', 'Data siswa diperbarui');
@@ -460,21 +468,28 @@ class UserManagementController extends Controller
     {
         try {
             $siswa = Siswa::where('nis', $id)->firstOrFail();
-            $user = $siswa->user;
 
-            if ($siswa->pas_photo && $siswa->pas_photo !== 'siswa.png') {
-                Storage::disk('public')->delete($siswa->pas_photo);
-            }
+            DB::transaction(function () use ($siswa) {
+                // Hapus file fisik
+                if ($siswa->pas_photo && $siswa->pas_photo !== 'siswa.png') {
+                    Storage::disk('public')->delete($siswa->pas_photo);
+                }
 
-            $siswa->delete();
-            if ($user) $user->delete();
+                // Simpan user sebelum siswa dihapus untuk dihapus belakangan
+                $user = $siswa->user;
+
+                $siswa->delete();
+                if ($user) $user->delete();
+            });
 
             return back()->with('success', 'Data siswa dan akun berhasil dihapus.');
         } catch (QueryException $e) {
             if ($e->getCode() == "23000") {
-                return back()->with('error', 'Gagal menghapus! Siswa memiliki data terkait.');
+                return back()->with('error', 'Gagal menghapus! Siswa memiliki data relasi (Nilai/Absensi dll).');
             }
             return back()->with('error', 'Error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan sistem.');
         }
     }
 
@@ -488,24 +503,22 @@ class UserManagementController extends Controller
             DB::transaction(function () use ($request) {
                 $path = $request->file('file')->getRealPath();
 
-                (new Rap2hpoutreFastExcel())->import($path, function ($line) {
+                (new FastExcel)->import($path, function ($line) {
                     if (empty($line['nis'])) return null;
                     if (Siswa::where('nis', $line['nis'])->exists()) return null;
 
-                    // Cari ID Kelas by Nama
                     $kelasId = null;
                     if (!empty($line['nama_kelas'])) {
-                        $kelas = Kelas::where('nama', $line['nama_kelas'])->first();
+                        $kelas = Kelas::where('nama', trim($line['nama_kelas']))->first();
                         $kelasId = $kelas ? $kelas->id : null;
                     }
 
-                    $nis = $line['nis'];
-                    $email = EmailGenerator::generateEmailDomain($nis);
+                    $nis = trim($line['nis']);
                     $password = $nis . '-' . Carbon::now()->format('Y');
 
                     $user = User::create([
                         'name'     => $line['nama_lengkap'],
-                        'email'    => $email,
+                        'email'    => EmailGenerator::generateEmailDomain($nis),
                         'password' => Hash::make($password),
                     ]);
 
@@ -513,7 +526,7 @@ class UserManagementController extends Controller
                         'nis'           => $nis,
                         'user_id'       => $user->id,
                         'kelas_id'      => $kelasId,
-                        'jenis_kelamin' => strtoupper($line['jk']),
+                        'jenis_kelamin' => strtoupper(trim($line['jk'])),
                         'agama'         => $line['agama'] ?? 'Islam',
                         'tahun_masuk'   => $line['tahun_masuk'] ?? date('Y'),
                         'tingkat'       => $line['tingkat'] ?? 10,
@@ -541,7 +554,7 @@ class UserManagementController extends Controller
             'nama_kelas' => 'X RPL 1',
             'status' => 'aktif'
         ]];
-        return (new Rap2hpoutreFastExcel($data))->download('template_siswa.xlsx');
+        return (new FastExcel($data))->download('template_siswa.xlsx');
     }
 
 
@@ -564,6 +577,7 @@ class UserManagementController extends Controller
             'kelas_id'    => 'required|exists:kelas,id',
         ]);
 
+        // Cek apakah sudah ada pengajar untuk mapel & kelas ini
         $existing = Pengajaran::with(['guru.user'])
             ->where('matpel_kode', $request->matpel_kode)
             ->where('kelas_id', $request->kelas_id)
