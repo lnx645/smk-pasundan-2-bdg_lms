@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\Discusion;
 use App\Models\JawabanTugas;
 use App\Models\Kelas;
 use App\Models\Siswa;
@@ -183,13 +184,26 @@ class TugasController extends Controller
                 'publish_date'      => now(), // atau isi sesuai kebutuhan
                 'created_by_user_id' => $request->user()->id,
             ]);
+            //masuk ke forum juga jika tugas
+
             if ($data['receiver_type'] == 'class_id') {
 
                 $classIds = $data['receiver_type_id'];
                 if (!is_array($classIds)) {
                     $classIds = [$classIds];
                 }
-
+                if ($tugas && is_array($classIds)) {
+                    foreach ($classIds as $id) {
+                        Discusion::create([
+                            'object_type_id' => $tugas->tugasID,
+                            'object_type' => 'tugas',
+                            'user_id' => $tugas->created_by_user_id,
+                            'kelas_id' => $id,
+                            'description' => $tugas->content,
+                            'matpel_kode' => $tugas->matpel_kode,
+                        ]);
+                    }
+                }
                 $receivers = User::whereHas('siswa', function ($query) use ($classIds) {
                     $query->whereIn('kelas_id', $classIds);
                 })->get();

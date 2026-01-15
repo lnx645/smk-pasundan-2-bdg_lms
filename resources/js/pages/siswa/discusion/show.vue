@@ -47,7 +47,10 @@
                         <div>
                             <div class="text-[13px] leading-snug">
                                 <span class="font-bold text-indigo-950">{{ item.user?.name }}</span>
-                                <span class="mx-1 text-slate-500">memposting {{ item.object_type === 'materi' ? 'materi' : 'diskusi' }}</span>
+                                <span class="mx-1 text-slate-500"
+                                    >memposting
+                                    {{ item.object_type === 'materi' ? 'materi' : item.object_type == 'tugas' ? 'tugas' : 'diskusi' }}</span
+                                >
                             </div>
                             <div class="mt-1 text-xs text-slate-400">
                                 {{ item.created_at_human }}
@@ -65,7 +68,15 @@
                 </div>
 
                 <div class="mb-4">
-                    <p class="mb-4 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-600">
+                    <template v-if="item?.linked_object">
+                        <div v-if="item.object_type === 'materi'" class="mt-4">
+                            <Discusion_type type="materi" :item="item?.linked_object" />
+                        </div>
+                        <div v-else>
+                            <Discusion_type type="tugas" :item="item?.linked_object" />
+                        </div>
+                    </template>
+                    <p v-if="!item?.linked_object" class="mt-4 mb-4 text-[15px] leading-relaxed whitespace-pre-wrap text-slate-600">
                         {{ isLongText(item.description) && !expandedPosts.includes(item.id) ? getTruncatedText(item.description) : item.description }}
                     </p>
                     <button
@@ -75,54 +86,6 @@
                     >
                         {{ expandedPosts.includes(item.id) ? 'Sembunyikan' : 'Baca Selengkapnya' }}
                     </button>
-
-                    <div v-if="item.object_type === 'materi' && item.linked_object" class="mt-4">
-                        <div
-                            class="flex items-center justify-between rounded-lg border border-slate-100 bg-white p-4 transition-shadow hover:shadow-md"
-                        >
-                            <div class="flex items-center gap-4 overflow-hidden">
-                                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="lucide lucide-notebook-text"
-                                    >
-                                        <path d="M2 6h4" />
-                                        <path d="M2 10h4" />
-                                        <path d="M2 14h4" />
-                                        <path d="M2 18h4" />
-                                        <rect width="16" height="20" x="4" y="2" rx="2" />
-                                        <path d="M9.5 8h5" />
-                                        <path d="M9.5 12h5" />
-                                        <path d="M9.5 16h5" />
-                                    </svg>
-                                </div>
-
-                                <div class="min-w-0">
-                                    <h4 class="truncate text-sm font-bold text-slate-900">
-                                        {{ item.linked_object.judul || item.linked_object.nama || 'Materi Baru' }}
-                                    </h4>
-                                    <p class="truncate text-xs font-medium text-indigo-900/80">Klik tombol detail untuk membuka materi</p>
-                                </div>
-                            </div>
-
-                            <div class="shrink-0 pl-4">
-                                <Link
-                                    :href="view({ id: item.linked_object.id }).url"
-                                    class="inline-flex items-center justify-center rounded-lg bg-orange-400 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-500"
-                                >
-                                    Lihat Detail
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="flex items-center gap-6 border-t border-slate-100 pt-4">
@@ -149,7 +112,6 @@
                     </Link>
                 </div>
             </div>
-
             <div v-if="discussions.length === 0" class="py-12 text-center">
                 <p class="text-slate-400">Belum ada diskusi yang dimulai.</p>
             </div>
@@ -167,7 +129,7 @@ import { Heart, MessageCircle, Send, Trash2 } from 'lucide-vue-next';
 // Components & Utils
 import DiscusionController from '@/actions/App/Http/Controllers/DiscusionController';
 import PageTitle from '@/layouts/page-title.vue';
-import { view } from '@/routes/siswa/materi';
+import Discusion_type from './components/discusion_type.vue';
 
 // Props Definition
 const props = defineProps<{

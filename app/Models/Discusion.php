@@ -27,6 +27,7 @@ class Discusion extends Model
     {
         return $this->morphTo(null, 'object_type', 'object_type_id');
     }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
