@@ -108,7 +108,7 @@
     <table class="kop-surat">
         <tr>
             <td width="15%" align="center">
-                <h2 style="border: 2px solid black; padding: 5px;">LOGO</h2>
+                <img width="80%" src="{{ public_path('logo.png') }}" class="logo" alt="Logo">
             </td>
             @include('pdf.kop_surat')
 

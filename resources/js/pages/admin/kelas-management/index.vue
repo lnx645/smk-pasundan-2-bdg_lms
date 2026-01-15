@@ -93,7 +93,11 @@ const openEditModal = (item: any) => {
 };
 
 const submit = () => {
-    const action = isEditing.value && editingId.value ? ManagementKelasController.update({ id: editingId.value }) : ManagementKelasController.store();
+    //@ts-ignore
+    const action =
+        isEditing.value && editingId.value
+            ? ManagementKelasController.update['/admin/kelas-management/edit/{id}']({ id: editingId.value as number })
+            : ManagementKelasController.store();
 
     // @ts-ignore
     form[isEditing.value ? 'put' : 'post'](action.url, {
@@ -108,7 +112,7 @@ const submit = () => {
 const deleteItem = (item: any) => {
     if (item.siswa_count > 0 || item.matpel_count > 0) return toast.error('Gagal', { description: 'Kelas masih memiliki Siswa/Mapel.' });
     if (confirm(`Hapus kelas ${item.nama}?`)) {
-        router.delete(ManagementKelasController.update({ id: item.id }).url, {
+        router.delete(ManagementKelasController.destroy['/admin/kelas-management/delete/{id}']({ id: item.id }).url, {
             onSuccess: () => toast.success('Kelas dihapus'),
             onError: (err) => toast.error(err.message || 'Gagal menghapus'),
         });

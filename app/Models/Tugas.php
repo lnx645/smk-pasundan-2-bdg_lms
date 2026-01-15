@@ -55,4 +55,12 @@ class Tugas extends Model
     {
         return $this->hasMany(Nilai::class, 'tugas_id', 'tugasID');
     }
+    public function mapel()
+    {
+        return $this->belongsTo(Matpel::class, 'matpel_kode');
+    }
+    public function guru()
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
+    }
 }

@@ -1,9 +1,9 @@
 <script setup>
+import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { store } from '@/routes/admin/akademik/akademik/plotting';
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
-// Props dari Controller Laravel
 const props = defineProps({
     matpels: Array,
     gurus: Array,
@@ -16,7 +16,6 @@ const form = useForm({
     kelas_ids: [],
 });
 
-// State untuk toggle "Tampilkan Semua Guru"
 const showAllGuru = ref(false);
 
 // --- LOGIKA FILTER GURU ---
@@ -55,20 +54,18 @@ const submit = () => {
         },
     });
 };
-
 const breadcrumbs = [{ label: 'Dashboard' }, { label: 'Akademik' }, { label: 'Plotting Jadwal' }];
 </script>
 
 <template>
     <Breadcrumb :items="breadcrumbs" />
 
-    <div class="min-h-screen bg-gray-50 py-12">
+    <div class="min-h-screen bg-gray-50 py-4">
         <div class="mx-auto max-w-6xl sm:px-6 lg:px-8">
             <div class="mb-6 px-2 sm:px-0">
                 <h2 class="text-2xl font-bold text-gray-800">Distribusi Mata Pelajaran</h2>
                 <p class="text-sm text-gray-500">Atur pengajar dan kelas target untuk setiap mata pelajaran.</p>
             </div>
-
             <div class="overflow-hidden border border-gray-100 bg-white sm:rounded-2xl">
                 <form @submit.prevent="submit">
                     <div class="border-b border-gray-100 bg-indigo-50/50 p-8">

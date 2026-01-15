@@ -2,7 +2,6 @@
 import { Link } from '@inertiajs/vue3';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
-// Pastikan props links diterima di sini
 defineProps<{
     links: any[]; 
 }>();
@@ -46,14 +45,17 @@ defineProps<{
                     <ChevronRight class="h-4 w-4" />
                 </Component>
 
-                <Link
+                <Component
+                    :is="link.url ? Link : 'span'"
                     v-else
                     :href="link.url"
                     class="flex h-8 min-w-[2rem] items-center justify-center px-3 rounded-md border text-xs font-medium transition-colors"
                     :class="[
                         link.active
                             ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm' // Style Aktif
-                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50' // Style Tidak Aktif
+                            : link.url 
+                                ? 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 cursor-pointer' // Style Link Biasa
+                                : 'border-transparent text-gray-500 cursor-default' // Style untuk '...' (titik tiga)
                     ]"
                     v-html="link.label"
                 />

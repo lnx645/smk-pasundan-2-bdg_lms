@@ -48,7 +48,9 @@ watch(
     <!-- List Materi By Matpel -->
     <div v-if="$page.props.materials.length > 0" class="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <div v-for="i in $page.props.materials">
-            <div class="cursor-pointer hover:bg-neutral-50 hover:ring-1 hover:ring-neutral-400 transition-all rounded-lg bg-white p-4 shadow transition-all hover:translate-y-1">
+            <div
+                class="cursor-pointer rounded-lg bg-white p-4 shadow transition-all hover:translate-y-1 hover:bg-neutral-50 hover:ring-1 hover:ring-neutral-400"
+            >
                 <h1>
                     <div class="mb-2 inline-flex items-center space-x-1 rounded text-sm text-primary">
                         <MdiFileWord />

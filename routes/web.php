@@ -9,13 +9,23 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MateriController;
 use App\Http\Controllers\NotifServiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DiscusionController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SiswaSecurityController;
 use App\Http\Controllers\TugasSiswaController;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/fcm-cloud/save-fcm-token', [NotifServiceController::class, 'saveFcmToken'])->name('save-fcm-token');
 Route::get("/send-notification", [NotifServiceController::class, 'testSend'])->name('send');
 Route::get('login', LoginController::class)->name('login');
 Route::post('login', [LoginController::class, 'checkLogin'])->name('login.check');
+// routes/api.php
+Route::get('/update-password', [SiswaSecurityController::class, 'index']);
+Route::post('/check-nisn', [SiswaSecurityController::class, 'checkNisn']);
+Route::post('/reset-password-security', [SiswaSecurityController::class, 'resetPassword']);
+
+
 Route::get('logout', [LoginController::class, 'logout'])->name('auth.logout');
 //authenticated guarded
 Route::middleware('authenticated')->group(function () {
@@ -24,6 +34,17 @@ Route::middleware('authenticated')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
 
+    //DISKUSI BUNG
+    Route::get('discusion/{kelas_id?}', [DiscusionController::class, 'index'])->name('siswa.discusion');
+    Route::get('discusion/{kelas_id}/matpel-{matpels_id}', [DiscusionController::class, 'show'])->name('siswa.discusion.show');
+    Route::post('discusion/{kelas_id}/matpel-{matpels_id}', [DiscusionController::class, 'store'])->name('siswa.discusion.store');
+    Route::post('/discussion/{discussion}/like', [DiscusionController::class, 'like'])->name('discussion.like');
+    //commentar
+    Route::get('discusion/{kelas_id}/matpel-{matpels_id}/{discusion}/comments', [DiscusionController::class, 'comments'])->name('siswa.discusion.comments');
+    Route::delete('discusion/{discusion}/delete', [DiscusionController::class, 'delete'])->name('siswa.discusion.delete');
+
+
+    Route::post('discusion/{discusion}/comments', [DiscusionController::class, 'postComment'])->name('siswa.discusion.postComment');
 
     Route::prefix('admin')->middleware('authenticated:admin')->name('admin.')->group(base_path('routes/admin.php'));
     Route::get('/', DashboardController::class)->name('home');
@@ -36,10 +57,21 @@ Route::middleware('authenticated')->group(function () {
         Route::get('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'kerjakan'])->name('siswa.tugas.kerjakan');
         Route::put('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'kerjakanSimpan'])->name('siswa.tugas.kerjakan.kerjakanSimpan');
         Route::delete('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'batalkanPengumpulan'])->name('siswa.tugas.kerjakan.batalkanPengumpulan');
+
+        Route::get('siswa/nilai', \App\Http\Controllers\Siswa\NilaiController::class)->name('siswa.nilai.index');
+
+        Route::prefix('siswa/keamanan')->name('siswa.keamanan.')->group(function () {
+            Route::get("", SiswaSecurityController::class)->name('index');
+            Route::post("", [SiswaSecurityController::class, 'update'])->name('update');
+        });
+
+
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notification');
     });
 
     // --- GURU ROUTES ---
     Route::middleware('authenticated:guru')->group(function () {
+        Route::get('guru/discusion', [DiscusionController::class, 'indexDiskusiGuru'])->name('siswa.discusion.indexDiskusiGuru');
         // Materi
         Route::get('/guru/materi/{kelas_kode?}', [GuruMateriController::class, 'materi'])->name('guru.materi');
         Route::get('/guru/materi/{kelas_kode?}/tambah-materi', [GuruMateriController::class, 'tambahMateri'])->name('guru.materi.tambah');

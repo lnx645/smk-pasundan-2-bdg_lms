@@ -2,8 +2,8 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-    --primary: #0B1479;
-    --primary-foreground: #FFFFFF;
+    --primary: #0b1479;
+    --primary-foreground: #ffffff;
     --top-menu: calc(calc(var(--spacing) * 24) + 2px);
 }
 
@@ -15,12 +15,10 @@
     --font-sans: Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-
 body {
+    overflow-x: hidden;
     background-color: var(--color-neutral-100);
 }
-
-
 
 .cool-table-wrapper {
     max-width: 900px;
@@ -44,7 +42,7 @@ thead.cool-head th {
     text-align: left;
     font-weight: 600;
     font-size: 13px;
-    letter-spacing: .5px;
+    letter-spacing: 0.5px;
     border-bottom: 2px solid #eaeaea;
 }
 
@@ -54,7 +52,7 @@ thead.cool-head tr {
 }
 
 thead.cool-head tr::after {
-    content: "";
+    content: '';
     position: absolute;
     left: 0;
     bottom: 0;
@@ -73,7 +71,6 @@ tbody.cool-body tr:hover {
     /* soft orange */
     transition: 0.2s ease;
 }
-
 
 /* Overlay fade */
 .vfm-fade-enter-active,
@@ -102,7 +99,6 @@ tbody.cool-body tr:hover {
     transform: translateY(-10px) scale(0.98);
 }
 
-
-.v-select .vs__search::placeholder{
+.v-select .vs__search::placeholder {
     @apply text-base;
 }
