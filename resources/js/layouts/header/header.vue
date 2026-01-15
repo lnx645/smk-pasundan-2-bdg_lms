@@ -12,7 +12,6 @@
                         class="relative flex items-center justify-center rounded-full p-2 text-gray-600 transition-colors"
                     >
                         <BellIcon class="h-6 w-6" color="white" />
-
                         <span
                             v-if="notif_count"
                             class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white"
@@ -95,20 +94,19 @@
 </template>
 
 <script setup lang="ts">
+import NotificationController from '@/actions/App/Http/Controllers/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/ProfileController';
 import SiswaSecurityController from '@/actions/App/Http/Controllers/SiswaSecurityController';
 import Avatar from '@/components/avatar.vue';
+import { ShieldCheckIcon, UserIcon } from '@heroicons/vue/24/outline';
 import { Link, usePage } from '@inertiajs/vue3';
 import { onClickOutside } from '@vueuse/core';
+import { BellIcon } from 'lucide-vue-next';
 import { AnimatePresence, motion } from 'motion-v';
 import { computed, ref } from 'vue';
 import Logo from './logo.vue';
 import AppMenu from './menu/app-menu.vue';
 const page = usePage();
-
-import NotificationController from '@/actions/App/Http/Controllers/NotificationController';
-import { ShieldCheckIcon, UserIcon } from '@heroicons/vue/24/outline';
-import { BellIcon } from 'lucide-vue-next';
 const notif_count = computed(() => page.props.notif_count);
 const profileOpen = ref(false);
 const profileRef = ref(null);

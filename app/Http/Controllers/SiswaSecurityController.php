@@ -64,7 +64,7 @@ class SiswaSecurityController extends Controller
 
         // Cek apakah User sudah set Security Question (kolom ada di tabel users)
         if (!$user->security_question) {
-            return response()->json(['message' => 'Akun ini belum mengatur Pertanyaan Keamanan. Hubungi Admin.'], 400);
+            return response()->json(['message' => 'Akun ini belum mengatur Pertanyaan Keamanan. Silahkan isi halaman keamanan sesuai dengan panduan yang diberikan'], 400);
         }
 
         return response()->json([
