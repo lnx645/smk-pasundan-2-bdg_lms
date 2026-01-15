@@ -58,6 +58,7 @@ Route::middleware('authenticated')->group(function () {
         Route::put('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'kerjakanSimpan'])->name('siswa.tugas.kerjakan.kerjakanSimpan');
         Route::delete('siswa/tugas/{id}/kerjakan', [TugasSiswaController::class, 'batalkanPengumpulan'])->name('siswa.tugas.kerjakan.batalkanPengumpulan');
 
+        Route::get('siswa/nilai', \App\Http\Controllers\Siswa\NilaiController::class)->name('siswa.nilai.index');
 
         Route::prefix('siswa/keamanan')->name('siswa.keamanan.')->group(function () {
             Route::get("", SiswaSecurityController::class)->name('index');
