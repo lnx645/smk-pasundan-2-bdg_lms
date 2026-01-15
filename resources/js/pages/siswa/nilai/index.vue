@@ -1,4 +1,5 @@
 <script setup>
+import PageTitle from '@/layouts/page-title.vue';
 import { Head } from '@inertiajs/vue3';
 
 defineProps({
@@ -25,10 +26,7 @@ const getScoreColor = (score) => {
 
     <div class="py-3">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">Transkrip Nilai</h2>
-                <p class="text-sm text-gray-500">Riwayat hasil penilaian tugas dan ujian.</p>
-            </div>
+            <PageTitle :title="`Transkrip Nilai`" subtitle="Riwayat hasil penilaian tugas dan ujian." />
 
             <div v-if="daftarNilai.length === 0" class="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center shadow-sm">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
