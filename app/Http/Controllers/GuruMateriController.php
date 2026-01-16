@@ -137,6 +137,7 @@ class GuruMateriController extends Controller
             'matpel' => "required",
             'youtube_id' => "string|required|url",
             'kelas_ids' => ['required'],
+            'kategori_materi' => ['required', 'string'],
             'description' => "string|required",
             'publish_date' => ['nullable'],
             'file_materi' => ["nullable"]

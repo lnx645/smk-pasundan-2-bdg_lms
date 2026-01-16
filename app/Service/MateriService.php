@@ -25,7 +25,7 @@ class MateriService implements MateriServiceInterface
             ->join('matpels', 'matpels.kode', '=', 'pengajarans.matpel_kode')
             ->join('users', 'users.id', '=', 'gurus.user_id')
             ->join('materials', 'materials.matpel_kode', 'pengajarans.matpel_kode')
-            ->select(['pengajarans.*', 'materials.publish_date', 'materials.file_materi', 'materials.nomor_materi', 'kelas.nama  as nama_kelas', 'materials.id as materi_id', 'gurus.gelar_depan', 'gurus.gelar_belakang', 'materials.title', 'materials.kelas_ids', 'matpels.nama as nama_matpel', 'users.name as nama_guru'])
+            ->select(['pengajarans.*', 'materials.kategori_materi', 'materials.publish_date', 'materials.file_materi', 'materials.nomor_materi', 'kelas.nama  as nama_kelas', 'materials.id as materi_id', 'gurus.gelar_depan', 'gurus.gelar_belakang', 'materials.title', 'materials.kelas_ids', 'matpels.nama as nama_matpel', 'users.name as nama_guru'])
             ->orderBy('materials.nomor_materi', 'desc')
             ->get();
 
@@ -89,8 +89,7 @@ class MateriService implements MateriServiceInterface
             $kelass = $data['kelas_ids'] ?? [];
             $matpel = $data['matpel']['kode_matpel'];
             $nomorMateriTerakhir = $this->getMateri($kelas_kode, $matpel)->max('nomor_materi');
-            $user = Siswa::with('user')->whereIn('kelas_id', $kelass)->get();
-
+            // $user = Siswa::with('user')->whereIn('kelas_id', $kelass)->get();
             $save = Materi::create([
                 'title' => $data['title'],
                 'created_by_user_id' => $guru_id,
@@ -101,17 +100,9 @@ class MateriService implements MateriServiceInterface
                 'youtube_id' => Youtube::parseVideoID($data['youtube_id']),
                 'kelas_ids' => $kelass,
                 'matpel_kode' => $matpel,
+                'kategori_materi' => $data['kategori_materi'],
                 'nomor_materi' => $nomorMateriTerakhir + 1,
             ]);
-            if ($save) {
-                $matpel = Matpel::find($matpel);
-                foreach ($user as $data) {
-                    $data->user->notify(new FcmNotification(
-                        "Materi Baru",
-                        "Ada Materi Baru Pada matpel " . $matpel->nama,
-                    ));
-                }
-            }
             return $save;
         } catch (\Throwable $th) {
             Log::error($th->getMessage());

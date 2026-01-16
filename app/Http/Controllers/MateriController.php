@@ -33,6 +33,7 @@ class MateriController extends Controller
             ->select([
                 'materi_id',
                 'nomor_materi',
+                'kategori_materi',
                 'title',
                 'nama_kelas',
                 'nama_matpel',
@@ -51,7 +52,7 @@ class MateriController extends Controller
     {
         $materi  = $materiService->getDetailMateri($id_materi);
         $isVisiting = true;
-        
+
         return inertia('siswa/view-materi', [
             'materi' => $materi,
             'visiting' => $isVisiting,

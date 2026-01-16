@@ -17,6 +17,7 @@ class Materi extends Model
         'created_by_user_id',
         'status',
         'publish_date',
+        'kategori_materi',
         'description',
         'file_materi',
         'nomor_materi',

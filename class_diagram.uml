@@ -1,0 +1,166 @@
+classDiagram
+    %% RELATIONSHIPS
+
+    %% User & Roles
+    User "1" -- "0..1" Guru : memiliki_profil
+    User "1" -- "0..1" Siswa : memiliki_profil
+    
+    %% Academic Structure
+    Kelas "1" -- "0..*" Siswa : menampung
+    Matpel "1" -- "0..*" Guru : diajarkan_oleh
+    Matpel "1" -- "0..*" Material : topik_dari
+    Matpel "1" -- "0..*" Tugas : topik_dari
+    
+    %% Teaching Assignment (Pengajaran)
+    Guru "1" -- "0..*" Pengajaran : ditugaskan_pada
+    Kelas "1" -- "0..*" Pengajaran : memiliki_jadwal
+    Matpel "1" -- "0..*" Pengajaran : dijadwalkan_di
+
+    %% Learning Materials & Tasks
+    User "1" -- "0..*" Material : membuat
+    User "1" -- "0..*" Tugas : membuat
+    Tugas "1" -- "0..*" JawabanTugas : menerima
+    User "1" -- "0..*" JawabanTugas : mengumpulkan
+    JawabanTugas "1" -- "0..1" Nilai : memiliki_nilai
+    User "1" -- "0..*" Nilai : mendapatkan_nilai
+
+    %% Quiz System
+    Guru "1" -- "0..*" Quiz : membuat
+    Quiz "1" *-- "1..*" QuizQuestion : terdiri_dari
+    QuizQuestion "1" *-- "2..*" QuizOption : memuat_opsi
+    Quiz "1" -- "0..*" QuizAttempt : mencatat_riwayat
+    User "1" -- "0..*" QuizAttempt : mengerjakan
+    QuizAttempt "1" -- "0..*" QuizAttemptAnswer : memuat_jawaban
+
+    %% DEFINITIONS
+
+    class User {
+        +BigInt id
+        +String name
+        +String email
+        +String password
+        +Boolean is_admin
+        +masuk()
+        +keluar()
+        +perbaruiProfil()
+        +ubahKataSandi()
+    }
+
+    class Guru {
+        +String nip
+        +Enum jenis_kelamin
+        +String gelar_depan
+        +String gelar_belakang
+        +unggahMateri()
+        +buatTugas()
+        +nilaiTugas()
+        +buatKuis()
+    }
+
+    class Siswa {
+        +String nis
+        +Year tahun_masuk
+        +Enum status
+        +lihatMateri()
+        +kumpulkanTugas()
+        +kerjakanKuis()
+        +lihatRapor()
+    }
+
+    class Kelas {
+        +BigInt id
+        +String nama
+        +TinyInt tingkat
+        +ambilDaftarSiswa()
+        +ambilJadwal()
+    }
+
+    class Matpel {
+        +String kode
+        +String nama
+        +Enum kategori
+        +ambilMateri()
+        +ambilTugas()
+    }
+
+    class Pengajaran {
+        +BigInt id
+        +Guru guru
+        +Kelas kelas
+        +Matpel matpel
+        +lihatJadwal()
+    }
+
+    class Material {
+        +UUID id
+        +String title
+        +Enum status
+        +JSON file_materi
+        +String youtube_id
+        +terbitkan()
+        +unduhFile()
+    }
+
+    class Tugas {
+        +UUID tugasID
+        +String title
+        +DateTime deadline
+        +Enum mode_pengumpulan
+        +terbitkan()
+        +ambilDaftarPengumpulan()
+        +tutupPengumpulan()
+    }
+
+    class JawabanTugas {
+        +UUID jawabanID
+        +Text jawaban
+        +String file_url
+        +DateTime created_at
+        +unggahFile()
+        +editTeks()
+    }
+
+    class Nilai {
+        +UUID id
+        +Int angka
+        +Text komentar
+        +kirimNilai()
+    }
+
+    class Quiz {
+        +BigInt id
+        +String title
+        +Int duration_minutes
+        +Double passing_grade
+        +String access_code
+        +mulaiKuis()
+        +terbitkanHasil()
+    }
+
+    class QuizQuestion {
+        +BigInt id
+        +Text question_text
+        +Double points
+        +tambahOpsi()
+    }
+
+    class QuizOption {
+        +BigInt id
+        +Text option_text
+        +Boolean is_correct
+    }
+
+    class QuizAttempt {
+        +BigInt id
+        +DateTime started_at
+        +DateTime finished_at
+        +Double score
+        +hitungSkor()
+        +kirimJawaban()
+    }
+    
+    class QuizAttemptAnswer {
+        +BigInt id
+        +Long question_id
+        +Long option_id
+    }

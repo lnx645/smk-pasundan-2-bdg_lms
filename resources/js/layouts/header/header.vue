@@ -35,7 +35,7 @@
 
                     <Link :href="ProfileController()" class="py-1 text-sm hover:text-primary"> Profil Saya </Link>
 
-                    <Link href="" method="post" class="py-1 text-sm text-red-600 hover:text-red-700"> Logout </Link>
+                    <Link :href="logout()" method="post" class="py-1 text-sm text-red-600 hover:text-red-700"> Logout </Link>
                 </div>
             </motion.div>
         </AnimatePresence>
@@ -47,6 +47,7 @@
 </template>
 
 <script setup lang="ts">
+import { logout } from '@/actions/App/Http/Controllers/LoginController';
 import ProfileController from '@/actions/App/Http/Controllers/ProfileController';
 import Avatar from '@/components/avatar.vue';
 import { Link } from '@inertiajs/vue3';
@@ -55,7 +56,6 @@ import { AnimatePresence, motion } from 'motion-v';
 import { ref } from 'vue';
 import Logo from './logo.vue';
 import AppMenu from './menu/app-menu.vue';
-
 const profileOpen = ref(false);
 const profileRef = ref(null);
 

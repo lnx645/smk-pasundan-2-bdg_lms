@@ -2,15 +2,15 @@
 import UserManagementController from '@/actions/App/Http/Controllers/Admin/UserManagementController';
 import Breadcrumb from '@/features/dashboard-admin/breadcrumb.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Pencil, Plus, Search, Trash2, FileSpreadsheet } from 'lucide-vue-next';
+import { FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 //@ts-ignore
+import Modal from '@/components/ui/modal.vue';
+import { debounce } from 'lodash';
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
-import Modal from '@/components/ui/modal.vue';
 import ImportSiswaModal from './import-modal-siswa.vue';
-import { debounce } from 'lodash';
 
 const props = defineProps<{
     users: any;
@@ -35,15 +35,15 @@ watch(
     search,
     debounce((value: string) => {
         router.get(
-            UserManagementController.siswa().url, 
+            UserManagementController.siswa().url,
             { search: value },
             {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-            }
+            },
         );
-    }, 300)
+    }, 300),
 );
 
 // Logic Delete
@@ -55,13 +55,12 @@ const handleDelete = (user: any) => {
     // Gunakan router.delete biasa. Inertia otomatis refresh props setelah sukses.
     router.delete(UserManagementController.destroySiswa({ id: user.siswa.nis }).url, {
         preserveScroll: true,
-        // preserveState: false, // Opsional: set false jika ingin memaksa state refresh total, tapi biasanya true sudah cukup jika pakai defineProps
         onSuccess: () => {
             toast.success('Data siswa berhasil dihapus');
         },
         onError: (errors: any) => {
             // Ambil flash error dari usePage() untuk notifikasi (ini aman pakai usePage)
-            const page = usePage(); 
+            const page = usePage();
             if ((page.props.flash as any)?.error) {
                 toast.error((page.props.flash as any).error);
             } else {
