@@ -16,7 +16,6 @@ function redirectToAbsensi() {
     <MenuItem label="Akademik" href="/" :has-dropdown="true" :icon="SolarSquareAcademicCap2Bold">
         <MenuItem label="Materi" :href="showMateri()" :icon="MaterialSymbolsMenuBookOutlineRounded" />
         <MenuItem label="Tugas" :href="showTugas()" :icon="HugeiconsTaskDaily01" />
-        <MenuItem label="Tugas" :href="QuizSiswaController.index().url" :icon="MaterialSymbolsMarkdownPaste" />
-        <MenuItem label="Absensi" :href="redirectToAbsensi()" :icon="MaterialSymbolsMarkdownPaste" />
+        <MenuItem label="Quiz" :href="QuizSiswaController.index().url" :icon="MaterialSymbolsMarkdownPaste" />
     </MenuItem>
 </template>

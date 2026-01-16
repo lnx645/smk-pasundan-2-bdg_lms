@@ -92,11 +92,7 @@ class MateriService implements MateriServiceInterface
             $kelass = $data['kelas_ids'] ?? [];
             $matpel = $data['matpel']['kode_matpel'];
             $nomorMateriTerakhir = $this->getMateri($kelas_kode, $matpel)->max('nomor_materi');
-<<<<<<< HEAD
             // $user = Siswa::with('user')->whereIn('kelas_id', $kelass)->get();
-=======
-
->>>>>>> 76946a030ba0d6b6fc35535b3510527be5e4305a
             $save = Materi::create([
                 'title' => $data['title'],
                 'created_by_user_id' => $guru_id,
@@ -110,38 +106,6 @@ class MateriService implements MateriServiceInterface
                 'kategori_materi' => $data['kategori_materi'],
                 'nomor_materi' => $nomorMateriTerakhir + 1,
             ]);
-<<<<<<< HEAD
-=======
-            if ($save) {
-                $matpel = Matpel::find($matpel);
-                $users = Siswa::with('user')->whereIn('kelas_id', $kelass)->get()->pluck('user');
-                //indonesia
-                if ($users->isNotEmpty()) {
-                    Notification::sendNow($users, new NewMateriNotification($save));
-                }
-                if (is_array($kelass)) {
-                    foreach ($kelass as $kelazz) {
-                        Discusion::create([
-                            'object_type' => 'materi',
-                            'object_type_id' => $save->id,
-                            'user_id' => $guru_id,
-                            'kelas_id' => $kelazz,
-                            'matpel_kode' => $matpel->kode,
-                            'description' => "Materi baru"
-                        ]);
-                    }
-                } else {
-                    Discusion::create([
-                        'object_type' => 'materi',
-                        'object_type_id' => $save->id,
-                        'user_id' => $guru_id,
-                        'kelas_id' => $kelas_kode,
-                        'matpel_kode' => $matpel->kode,
-                        'description' => "Materi baru"
-                    ]);
-                }
-            }
->>>>>>> 76946a030ba0d6b6fc35535b3510527be5e4305a
             return $save;
         } catch (\Throwable $th) {
             Log::error($th->getMessage());
