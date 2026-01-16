@@ -27,7 +27,6 @@ class GuruQuizController extends Controller
     }
     public function index(Request $request)
     {
-
         $user = Auth::user();
         $guruNip = $user->guru->nip;
         $pengajaran = Pengajaran::where('guru_nip', $guruNip)->get();
