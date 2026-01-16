@@ -1,10 +1,6 @@
 <template>
     <li ref="dropdownRef" class="relative z-50 p-1 text-neutral-700">
-        <Link 
-            v-if="!hasDropdown"
-            class="flex items-center px-2 py-1.5 hover:rounded-md hover:bg-neutral-100 focus:bg-neutral-100"
-            :href="href"
-        >
+        <Link v-if="!hasDropdown" class="flex items-center px-2 py-1.5 hover:rounded-md hover:bg-neutral-100 focus:bg-neutral-100" :href="href">
             <div class="flex items-center">
                 <component width="17" height="17" :is="icon" />
                 <span class="ml-1.5 text-sm">{{ label }}</span>
@@ -39,10 +35,10 @@
 <script setup lang="ts">
 import RiArrowDownSLine from '@/icons/RiArrowDownSLine.vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { onClickOutside } from '@vueuse/core';
 import { AnimatePresence, motion } from 'motion-v';
 import type { Component } from 'vue';
 import { ref, watch } from 'vue';
-import { onClickOutside } from "@vueuse/core";
 
 defineProps<{
     href: string | { url: string; method: any } | any;

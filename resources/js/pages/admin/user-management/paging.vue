@@ -39,8 +39,16 @@ defineProps<{
                     :href="link.url"
                     class="flex h-8 min-w-[2rem] items-center justify-center rounded-md border px-3 text-xs font-medium transition-colors"
                     :class="[
+<<<<<<< HEAD
                         link.active ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm' : 'border-gray-200 bg-white text-gray-600',
                         !link.url ? 'cursor-default' : 'hover:bg-gray-50', // Tambahan style untuk separator
+=======
+                        link.active
+                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm' // Style Aktif
+                            : link.url 
+                                ? 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 cursor-pointer' // Style Link Biasa
+                                : 'border-transparent text-gray-500 cursor-default' // Style untuk '...' (titik tiga)
+>>>>>>> 76946a030ba0d6b6fc35535b3510527be5e4305a
                     ]"
                     v-html="link.label"
                 />

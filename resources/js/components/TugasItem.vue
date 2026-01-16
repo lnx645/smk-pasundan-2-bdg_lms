@@ -6,7 +6,7 @@ import { computed } from 'vue';
 const props = defineProps<{
     item: any;
 }>();
-const progress = props.item.persen_submit || 50;
+const progress = props.item.persen_submit;
 
 const isUrgent = computed(() => {
     const today = new Date();
@@ -62,7 +62,7 @@ const isUrgent = computed(() => {
                     :class="
                         cn(
                             'inline-flex items-center rounded border border-neutral-200 bg-white px-2 py-1 text-[11px] font-medium text-neutral-600 shadow-sm',
-                            siswa.dikerjakan ? 'bg-green-500 border-green-600 text-white' : 'bg-red-500 border-red-600 text-white',
+                            siswa.dikerjakan ? 'border-green-600 bg-green-500 text-white' : 'border-red-600 bg-red-500 text-white',
                         )
                     "
                 >

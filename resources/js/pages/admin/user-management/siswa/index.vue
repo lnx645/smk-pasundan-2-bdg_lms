@@ -8,6 +8,10 @@ import { toast } from 'vue-sonner';
 //@ts-ignore
 import Modal from '@/components/ui/modal.vue';
 import { debounce } from 'lodash';
+<<<<<<< HEAD
+=======
+//@ts-ignore
+>>>>>>> 76946a030ba0d6b6fc35535b3510527be5e4305a
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
 import ImportSiswaModal from './import-modal-siswa.vue';
@@ -30,7 +34,16 @@ const breadcrumbs = [{ label: 'Dashboard' }, { label: 'User Management' }];
 
 const search = ref(props.filters?.search || '');
 const showImportModal = ref(false);
+const statusMap: Record<string, string> = {
+    aktif: 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-600/20',
+    lulus: 'bg-blue-100 text-blue-700 ring-1 ring-blue-600/20',
+    keluar: 'bg-rose-100 text-rose-700 ring-1 ring-rose-600/20',
+    tinggal_kelas: 'bg-amber-100 text-amber-700 ring-1 ring-amber-600/20',
+};
 
+const formatStatus = (status: string) => {
+    return status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+};
 watch(
     search,
     debounce((value: string) => {
@@ -145,10 +158,10 @@ const handleDelete = (user: any) => {
 
                         <td class="px-6 py-4 text-center">
                             <span
-                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                :class="user.siswa.status === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold shadow-sm transition-all"
+                                :class="statusMap[user.siswa.status.toLowerCase()] || 'bg-gray-100 text-gray-600'"
                             >
-                                {{ user.siswa.status }}
+                                {{ formatStatus(user.siswa.status) }}
                             </span>
                         </td>
 

@@ -8,6 +8,7 @@ import { computed, ref, watch } from 'vue';
 import Paging from '@/components/paging.vue'; // Pastikan path paging benar
 import Modal from '@/components/ui/modal.vue';
 import { debounce } from 'lodash';
+//@ts-ignore
 import Avatar from 'vue3-avatar';
 import PenugasanGuru from './penugasan-guru.vue';
 // 2. Import Modal Import
