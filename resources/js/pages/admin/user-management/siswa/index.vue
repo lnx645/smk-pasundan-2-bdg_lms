@@ -9,6 +9,7 @@ import { toast } from 'vue-sonner';
 import Modal from '@/components/ui/modal.vue';
 import { debounce } from 'lodash';
 //@ts-ignore
+import KenaikanKelasController from '@/actions/App/Http/Controllers/Admin/KenaikanKelasController';
 import Avatar from 'vue3-avatar';
 import Paging from '../paging.vue';
 import ImportSiswaModal from './import-modal-siswa.vue';
@@ -104,7 +105,13 @@ const handleDelete = (user: any) => {
                     <FileSpreadsheet class="h-4 w-4 text-green-600" />
                     <span>Import Excel</span>
                 </button>
-
+                <Link
+                    :href="KenaikanKelasController.index()"
+                    class="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+                >
+                    <Plus class="h-4 w-4" />
+                    <span>Naik Kelas</span>
+                </Link>
                 <Link
                     :href="UserManagementController.tambahSiswa()"
                     class="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"

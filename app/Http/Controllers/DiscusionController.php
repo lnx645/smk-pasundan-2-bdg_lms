@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Discusion;
 use App\Models\DiscusionComment;
 use App\Models\Matpel;
+use App\Service\Contract\DiscusionServiceInterface;
 use App\Service\Contract\KelasServiceInterface;
 use App\Service\Contract\MatpelServiceInterface;
 use Illuminate\Http\Request;
@@ -54,53 +55,34 @@ class DiscusionController extends Controller
         $kelas = $kelasService->getKelasByGuru($request->role_id);
         return inertia('guru/diskusi_index', ['kelas' => $kelas]);
     }
-    public function index(Request $request, KelasServiceInterface $kelasService, string $kelas_id = null)
+    public function index(Request $request, KelasServiceInterface $kelasService, string|null $kelas_id = null)
     {
+
         $id = $request->role_id;
         $kelas = $request->kelas['id'] ?? $kelas_id;
-        $matpels = $kelasService->get_matpels($kelas);
-        $role = $request->role;
-        if ($role == 'guru') {
-            $matpels =  $matpels->filter(function ($kelas) use ($id) {
-                return $kelas->guru_nip === $id;
-            });
-        }
+        $matpels = $kelasService->getMatpelForUser(
+            $kelas_id,
+            $request->role,
+            $id
+        );
         return inertia('siswa/discusion/index', [
             'matpels' => $matpels,
             'kelas_id' => $kelas,
         ]);
     }
 
-    public function show(Request $request, KelasServiceInterface $kelasService, string $kelas_id, string $matpels_id)
+    public function show(DiscusionServiceInterface $discusionService, string $kelas_id, string $matpel_kode)
     {
         $user = Auth::user();
-
-        if ($user->role == 'siswa') {
-            $user->with(['siswa.kelas']);
-            if ($user->siswa->kelas->id != $kelas_id) {
-                return abort(404);
-            }
-        } else if ($user->role == 'guru') {
-            $kelas = $kelasService->getKelasByGuru($request->role_id);
-            $isAuthorized = $kelas->contains('id_kelas', $kelas_id);
-            if (!$isAuthorized) {
-                return abort(404);
-            }
+        if (!$discusionService->isCanAccessesdDiscusion($user, $kelas_id)) {
+            return abort(403);
         }
-        $discussions = Discusion::with(['user', 'matpel', 'comments', 'linkedObject'])
-            ->where('kelas_id', $kelas_id)
-            ->where('matpel_kode', $matpels_id)
-            ->latest()
-            ->get()->map(function ($item) {
-                $item->created_at_human = $item->created_at->diffForHumans();
-                return $item;
-            });
-
+        $discusions = $discusionService->loadDiscusion($kelas_id, $matpel_kode);
         return inertia('siswa/discusion/show', [
-            'discussions' => $discussions,
+            'discussions' => $discusions,
             'kelas_id' => $kelas_id,
-            'matpels' => Matpel::find($matpels_id)->first(),
-            'matpel_kode' => $matpels_id,
+            'matpels' => Matpel::find($matpel_kode)->first(),
+            'matpel_kode' => $matpel_kode,
         ]);
     }
     public function like(Discusion $discussion)
@@ -109,10 +91,9 @@ class DiscusionController extends Controller
 
         return redirect()->back()->with('message', 'Disukai!');
     }
-    public function delete(Request $request, string $discussion)
+    public function delete(string $discussion)
     {
         $user = Auth::user();
-
         $discusion = Discusion::findOrFail($discussion);
         if ($discusion) {
             $discusion->delete();
@@ -125,7 +106,7 @@ class DiscusionController extends Controller
             ]);
         }
     }
-    public function store(Request $request, String $kelas_id, string $matpel_kode)
+    public function store(Request $request)
     {
 
         $user = Auth::user();
@@ -146,7 +127,6 @@ class DiscusionController extends Controller
             'kelas_id'       => $validated['kelas_id'],
             'matpel_kode'    => $validated['matpel_kode'],
         ]);
-
         return redirect()->back()->with('message', 'Diskusi berhasil dikirim');
     }
 }

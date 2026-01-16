@@ -61,6 +61,7 @@
                             </Link>
 
                             <Link
+                                v-if="$page.props.auth.user.role == 'siswa'"
                                 :href="SiswaSecurityController()"
                                 class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary"
                             >

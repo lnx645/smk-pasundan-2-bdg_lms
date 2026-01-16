@@ -10,6 +10,16 @@ use Illuminate\Support\Facades\DB;
 
 class KelasServiceImpl implements KelasServiceInterface
 {
+    public function getMatpelForUser($targetKelasId, $role, $user_id)
+    {
+        $matpels = $this->get_matpels($targetKelasId);
+        if ($role == 'guru') {
+            $matpels =  $matpels->filter(function ($kelas) use ($user_id) {
+                return $kelas->guru_nip === $user_id;
+            });
+        }
+        return $matpels;
+    }
     public function getActiveClass(string $kelas_kode)
     {
         $kelasActive = collect([]);

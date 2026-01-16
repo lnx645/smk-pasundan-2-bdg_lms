@@ -341,21 +341,26 @@ class UserManagementController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function (Builder $q) use ($search) {
+
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
+
                     ->orWhereHas('siswa', function (Builder $qSiswa) use ($search) {
-                        $qSiswa->where('nis', 'like', "%{$search}%");
+                        $qSiswa->where('nis', 'like', "%{$search}%")->orWhere('status', 'like', "%$search%");
+                        $qSiswa->orWhereHas('kelas', function (Builder $qSiswa) use ($search) {
+                            $qSiswa->where('nama', 'like', "%{$search}%");
+                        });
                     });
             });
         }
 
         // FIX N+1: Tambahkan 'siswa' secara eksplisit
         $users = $query->with([
-            'siswa',       // <--- PENTING
-            'siswa.kelas'  // Load relasi nested
+            'siswa',
+            'siswa.kelas'
         ])
-            ->orderBy('name', 'asc') // Urutkan berdasarkan kolom name di tabel users
-            ->paginate(10) // Naikkan pagination biar tidak terlalu sering klik next
+            ->orderBy('name', 'asc')
+            ->paginate(32)
             ->withQueryString();
 
         return inertia('admin/user-management/siswa/index', [
@@ -426,8 +431,7 @@ class UserManagementController extends Controller
 
         $request->validate([
             'name'      => 'required',
-            // Perbaikan unique rule untuk NIS (abaikan NIS siswa ini sendiri)
-            'nis'       => ['required', Rule::unique('siswas', 'nis')->ignore($siswa->id)],
+            'nis'       => ['required', Rule::unique('siswas')->ignore($siswa)],
             'kelas_id'  => 'required|exists:kelas,id',
             'pas_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -568,7 +572,10 @@ class UserManagementController extends Controller
     {
         return inertia('admin/user-management/index');
     }
-
+    public function naikKelas()
+    {
+        return inertia('admin/user-management/siswa/naik-kelas');
+    }
     public function addMatpelToGuru(Request $request)
     {
         $request->validate([

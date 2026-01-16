@@ -45,6 +45,9 @@ class HandleInertiaRequests extends Middleware
             $notif = Auth::user()->unreadNotifications->count();
         }
         return [
+            'flash' => [
+                'message' => fn() => session('message'),
+            ],
             'notif_count' => $notif,
             ...parent::share($request),
             'name' => config('app.name'),

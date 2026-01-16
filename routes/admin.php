@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AkademikController;
 use App\Http\Controllers\Admin\CetakLaporanController;
 use App\Http\Controllers\Admin\HomeController;
+use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\ManagementKelasController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\MatpelController;
@@ -27,6 +28,10 @@ Route::prefix('user-management')->name('user-management.')->group(function () {
     Route::delete('delete-siswa/{id}', [UserManagementController::class, 'destroySiswa'])->name('udestroy-siswa');
     Route::get('siswa/template', [UserManagementController::class, 'downloadTemplateSiswa'])->name('templateSiswa');
     Route::post('siswa/import', [UserManagementController::class, 'importSiswa'])->name('importSiswa');
+
+    Route::get('siswa/naik-kelas', [KenaikanKelasController::class, 'index'])->name('siswa.naikKelas');
+    Route::post('siswa/naik-kelas', [KenaikanKelasController::class, 'store'])->name('siswa.store');
+
     ## USER
     Route::get('create-user', [UserManagementController::class, 'createUser'])->name('createUser'); // List
     Route::get('edit-user/{id}', [UserManagementController::class, 'editUser'])->name('editUser'); // List

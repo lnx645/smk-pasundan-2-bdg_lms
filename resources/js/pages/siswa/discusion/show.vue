@@ -123,18 +123,19 @@
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import { computed, ref } from 'vue';
-
 // Icons
 import { Heart, MessageCircle, Send, Trash2 } from 'lucide-vue-next';
 // Components & Utils
 import DiscusionController from '@/actions/App/Http/Controllers/DiscusionController';
 import PageTitle from '@/layouts/page-title.vue';
+import { toast } from 'vue-sonner';
 import Discusion_type from './components/discusion_type.vue';
 
 // Props Definition
 const props = defineProps<{
     matpels: any;
     discussions: any[];
+    flash: any;
     kelas_id: any;
     matpel_kode: string;
     current_matpel_name: string;
@@ -146,7 +147,6 @@ const user = computed(() => page.props.auth.user);
 const isGuru = computed(() => user.value.role === 'guru');
 const current_matpel_name = computed(() => props.matpels?.nama || props.current_matpel_name);
 const expandedPosts = ref<number[]>([]);
-
 // Form Setup
 const form = useForm({
     description: '',
@@ -165,7 +165,12 @@ const submit = (type: string = 'forum') => {
         }).url,
         {
             preserveScroll: true,
-            onSuccess: () => form.reset('description'),
+            onSuccess: () => {
+                form.reset('description');
+                if (props?.flash?.message) {
+                    toast.success(props?.flash?.message);
+                }
+            },
         },
     );
 };
@@ -188,13 +193,7 @@ const onDelete = (id: string) => {
         if (result.isConfirmed) {
             router.delete(DiscusionController.delete({ discusion: id }).url, {
                 onSuccess: () => {
-                    Swal.fire({
-                        title: 'Terhapus!',
-                        text: 'Diskusi berhasil dihapus.',
-                        icon: 'success',
-                        timer: 1500,
-                        showConfirmButton: false,
-                    });
+                    toast.success('Diskusi berhasil dihapus.');
                 },
             });
         }
