@@ -21,7 +21,7 @@ class Nilai extends Model
 
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'siswa_id');
+        return $this->belongsTo(User::class);
     }
 
     public function tugas()

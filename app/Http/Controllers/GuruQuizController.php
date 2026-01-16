@@ -73,18 +73,15 @@ class GuruQuizController extends Controller
     public function result(Request $request, Quiz $quiz)
     {
         $search = $request->input('search');
-        $kelasId = $request->input('kelas'); 
+        $kelasId = $request->input('kelas');
 
-        // 2. Query Attempts (Percobaan Siswa)
         $attempts = $quiz->attempts()
             ->with(['user', 'user.siswa.kelas'])
-            // Filter Search Nama
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('user', function ($u) use ($search) {
                     $u->where('name', 'like', "%{$search}%");
                 });
             })
-            // Filter Kelas (LOGIKA BARU)
             ->when($kelasId, function ($q) use ($kelasId) {
                 $q->whereHas('user.siswa', function ($s) use ($kelasId) {
                     $s->where('kelas_id', $kelasId);

@@ -15,7 +15,7 @@ class NilaiController extends Controller
      * 1. Menampilkan Halaman (View)
      * Route: GET /guru/nilai
      */
-    public function kelola_nilai(  Request $request,  MatpelServiceInterface $matpelService)
+    public function kelola_nilai(Request $request,  MatpelServiceInterface $matpelService)
     {
         $id = $request->role_id;
         $matpel = $matpelService->getMatpelByGuru($id);
@@ -24,11 +24,11 @@ class NilaiController extends Controller
         ]);
     }
 
-   
+
     public function index(Request $request)
     {
         // Query dasar dengan relasi
-        $query = Nilai::with(['siswa', 'tugas.matpel']);
+        $query = Nilai::with(['siswa', 'siswa.siswa', 'tugas.matpel']);
 
         // Filter: Jika ada siswa_id yang dikirim dari frontend
         if ($request->filled('siswa_id')) {
@@ -36,7 +36,7 @@ class NilaiController extends Controller
         }
         // Ambil data urut terbaru
         $nilai = $query->latest()->get();
-        
+
         $listSiswa = User::whereHas('nilais')
             ->select('id', 'name')
             ->distinct()

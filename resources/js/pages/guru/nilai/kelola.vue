@@ -1,5 +1,4 @@
 <template>
-
     <div class="min-h-screen bg-gray-50/50 p-6 font-sans text-gray-800">
         <div class="mx-auto mb-8 max-w-7xl">
             <div class="flex flex-col justify-between gap-6 md:flex-row md:items-center">
@@ -66,7 +65,7 @@
                                         </div>
                                         <div>
                                             <div class="text-sm font-semibold text-gray-900">{{ nilai.siswa?.name || 'Unknown' }}</div>
-                                            <div class="text-xs text-gray-400">ID: {{ String(nilai.siswa.id).substring(0, 6) }}...</div>
+                                            <div class="text-xs text-gray-400">ID: {{ String(nilai.siswa.siswa.nis).substring(0, 6) }}...</div>
                                         </div>
                                     </div>
                                 </td>
@@ -161,7 +160,7 @@
                                                 type="number"
                                                 min="0"
                                                 max="100"
-                                                class="block w-full border rounded-lg border-gray-300 py-2.5 pl-4 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                class="block w-full rounded-lg border border-gray-300 py-2.5 pl-4 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             />
                                         </div>
                                         <div>
@@ -169,7 +168,7 @@
                                             <textarea
                                                 v-model="form.komentar"
                                                 rows="4"
-                                                class="block w-full border rounded-lg border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                class="block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                             ></textarea>
                                         </div>
                                     </div>
@@ -204,7 +203,7 @@ import { onMounted, ref } from 'vue';
 // Import Toaster dan toast dari vue-sonner
 import NilaiController from '@/actions/App/Http/Controllers/Guru/NilaiController';
 import { FilterIcon, InboxIcon, PencilIcon, TrashIcon, XIcon } from 'lucide-vue-next';
-import { Toaster, toast } from 'vue-sonner';
+import { toast } from 'vue-sonner';
 
 // State
 const nilaiList = ref([]);

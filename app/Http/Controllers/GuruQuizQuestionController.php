@@ -13,7 +13,7 @@ class GuruQuizQuestionController extends Controller
     {
         $questions = $quiz->questions()
             ->with('options')
-            ->orderBy('id', 'desc') // Supaya soal yang baru diinput muncul di atas
+            ->orderBy('id', 'desc')
             ->get();
         return inertia('guru/quiz/questions/index', [
             'quiz' => $quiz,
