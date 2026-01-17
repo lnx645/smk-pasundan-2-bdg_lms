@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Models\Kelas;
 use App\Models\Pengajaran;
+use App\Models\User;
 use App\Service\Contract\KelasServiceInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

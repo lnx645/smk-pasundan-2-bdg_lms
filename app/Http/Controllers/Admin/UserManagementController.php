@@ -354,7 +354,6 @@ class UserManagementController extends Controller
             });
         }
 
-        // FIX N+1: Tambahkan 'siswa' secara eksplisit
         $users = $query->with([
             'siswa',
             'siswa.kelas'

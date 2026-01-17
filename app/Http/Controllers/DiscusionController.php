@@ -61,7 +61,7 @@ class DiscusionController extends Controller
         $id = $request->role_id;
         $kelas = $request->kelas['id'] ?? $kelas_id;
         $matpels = $kelasService->getMatpelForUser(
-            $kelas_id,
+            $kelas,
             $request->role,
             $id
         );
