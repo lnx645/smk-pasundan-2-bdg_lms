@@ -61,11 +61,18 @@ class GuruMateriController extends Controller
                     );
                 });
             }
+            if (count($matpel) == 1 && empty($kodeMatpel)) {
+                return redirect()->route('guru.materi', [
+                    'kelas_kode' => $kelas_kode,
+                    'kode_matpel' => $matpel[0]->kode_matpel,
+                ]);
+            }
             return inertia('guru/materi', [
                 'matpels' => $matpel,
                 'kelas_kode' => $kelas_kode,
                 'kode_matpel' => $kodeMatpel,
                 'materials' => $materi ?? null,
+                'matpel_count' => count($matpel),
             ]);
         }
         $kelas = $kelasService->getKelasByGuru($nipGuru);

@@ -92,8 +92,6 @@
                     </div>
                 </div>
             </div>
-            {{ page.props.active_kelas }}
-            {{ data.kelas_ids }}
             <div class="space-y-4 lg:col-span-3">
                 <div class="rounded-xl border border-neutral-200 bg-white shadow-sm">
                     <div class="rounded-t-xl border-b border-neutral-100 bg-neutral-50 px-4 py-3">
