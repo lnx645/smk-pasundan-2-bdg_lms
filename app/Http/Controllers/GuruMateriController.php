@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Discusion;
+use App\Models\Kelas;
 use App\Models\Materi;
 use App\Models\Siswa;
 use App\Service\Contract\KelasServiceInterface;
@@ -95,8 +96,7 @@ class GuruMateriController extends Controller
         $nipGuru = $request->role_id;
         $matpels = $matpelService->getMatpelByKelasAndGuru($kelas_kode, $nipGuru);
         $kelas = $kelasService->getKelasByGuru($nipGuru);
-        $kelasActive = $kelasService->getActiveClass($kelas_kode);
-
+        $kelasActive = [Kelas::find($kelas_kode)->id];
         //masuk diskusi
 
         return inertia('guru/tambah-materi', [

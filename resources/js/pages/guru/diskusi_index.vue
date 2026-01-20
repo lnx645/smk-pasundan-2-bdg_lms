@@ -45,4 +45,6 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 // Ambil semua props dari Inertia
 const props = usePage().props as any;
+
+const current_matpel_name = props.matpel_name ?? 'Umum';
 </script>

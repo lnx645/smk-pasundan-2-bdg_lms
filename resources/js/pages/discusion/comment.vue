@@ -41,7 +41,7 @@
                     </div>
 
                     <div class="prose prose-sm max-w-none leading-relaxed whitespace-pre-wrap text-gray-800">
-                        {{ discusion.description }}
+                        <div v-html="discusion.description" />
                     </div>
 
                     <div class="mt-6 flex items-center gap-6 border-t border-gray-50 pt-4 text-sm text-gray-500">

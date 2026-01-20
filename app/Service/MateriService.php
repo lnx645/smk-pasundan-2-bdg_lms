@@ -38,7 +38,12 @@ class MateriService implements MateriServiceInterface
                 : $materi->kelas_ids;
 
             return collect($kelas_ids)
-                ->map(fn($k) => trim(strtolower($k)))
+                ->map(function ($k) {
+                    if (is_array($k)) {
+                        return $k['id_kelas'];
+                    }
+                    return trim(strtolower($k));
+                })
                 ->contains(trim(strtolower($kelas_id)));
         })->filter(function ($item) {
             return Carbon::parse($item->publish_date)->lessThanOrEqualTo(Carbon::now());
@@ -91,8 +96,7 @@ class MateriService implements MateriServiceInterface
         try {
             $kelass = $data['kelas_ids'] ?? [];
             $matpel = $data['matpel']['kode_matpel'];
-            $nomorMateriTerakhir = $this->getMateri($kelas_kode, $matpel)->max('nomor_materi');
-
+            $nomorMateriTerakhir = 1 + (int)Materi::where('matpel_kode', $matpel)->max('nomor_materi');
             $save = Materi::create([
                 'title' => $data['title'],
                 'created_by_user_id' => $guru_id,
@@ -103,12 +107,11 @@ class MateriService implements MateriServiceInterface
                 'youtube_id' => Youtube::parseVideoID($data['youtube_id']),
                 'kelas_ids' => $kelass,
                 'matpel_kode' => $matpel,
-                'nomor_materi' => $nomorMateriTerakhir + 1,
+                'nomor_materi' => $nomorMateriTerakhir
             ]);
             if ($save) {
                 $matpel = Matpel::find($matpel);
                 $users = Siswa::with('user')->whereIn('kelas_id', $kelass)->get()->pluck('user');
-                //indonesia
                 if ($users->isNotEmpty()) {
                     Notification::sendNow($users, new NewMateriNotification($save));
                 }
@@ -136,7 +139,7 @@ class MateriService implements MateriServiceInterface
             }
             return $save;
         } catch (\Throwable $th) {
-            Log::error($th->getMessage());
+            Log::error($th);
         }
     }
 }

@@ -13,6 +13,25 @@ use Illuminate\Http\Request;
 
 class CetakLaporanController extends Controller
 {
+    public function cetakKelas(Request $request)
+    {
+        $query = Kelas::withCount('siswa')
+            ->with(['pengajarans.guru.user', 'pengajarans.matpel']);
+
+        if ($request->has('tingkat') && $request->tingkat != 'all') {
+            $query->where('tingkat', $request->tingkat);
+        }
+
+        $kelas = $query->orderBy('tingkat')->orderBy('nama')->get();
+
+        $pdf = Pdf::loadView('pdf.laporan_kelas', [
+            'data_kelas' => $kelas,
+            'tanggal' => now()->translatedFormat('d F Y')
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->stream('Laporan-Data-Kelas.pdf');
+    }
     public function __invoke()
     {
         return inertia('admin/laporan/index', [
@@ -24,9 +43,11 @@ class CetakLaporanController extends Controller
     // 1. CETAK SISWA (Order by Nama Siswa A-Z)
     public function cetakLaporanSiswa(Request $request)
     {
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
         $query = Siswa::query()
             ->join('users', 'siswas.user_id', '=', 'users.id')
-            ->with(['user', 'kelas'])
+            ->with(['kelas'])
             ->select('siswas.*'); // Agar ID tidak tertukar dengan ID User
 
         if ($request->filled('kelas_id') && $request->kelas_id != 'all') {
