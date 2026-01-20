@@ -38,7 +38,7 @@ class MateriService implements MateriServiceInterface
                 : $materi->kelas_ids;
 
             return collect($kelas_ids)
-                ->map(fn($k) => trim(strtolower($k)))
+                ->map(fn($k) => is_array(trim(strtolower($k))) ? [] : [])
                 ->contains(trim(strtolower($kelas_id)));
         })->filter(function ($item) {
             return Carbon::parse($item->publish_date)->lessThanOrEqualTo(Carbon::now());
